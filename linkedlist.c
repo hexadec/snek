@@ -5,6 +5,19 @@
 #include <stdlib.h>
 #include "linkedlist.h"
 
+static bool next(LinkedList *);
+static bool prev(LinkedList *);
+static void toStart(LinkedList *);
+static void toEnd(LinkedList *);
+static void add(LinkedList *, void * data);
+static void addFirst(LinkedList *, void * data);
+static void addLast(LinkedList *, void * data);
+static void removeItem(LinkedList *);
+static void seek(LinkedList *, int offset, Flags whence);
+static bool hasNext(LinkedList *);
+static bool hasPrevious(LinkedList *);
+static size_t size(LinkedList *);
+
 LinkedList * createLinkedList() {
     LinkedList * new = malloc(sizeof (LinkedList));
     new->node = NULL;
@@ -19,11 +32,12 @@ LinkedList * createLinkedList() {
     new->seek = &seek;
     new->hasNext = &hasNext;
     new->hasPrevious = &hasPrevious;
+    new->size = &size;
     return new;
 }
 
 static bool next(LinkedList * linkedList) {
-    if (linkedList->node != NULL && linkedList->node->next != NULL) {
+    if (linkedList != NULL && linkedList->node != NULL && linkedList->node->next != NULL) {
         linkedList->node = linkedList->node->next;
         return true;
     }
@@ -31,7 +45,7 @@ static bool next(LinkedList * linkedList) {
 }
 
 static bool prev(LinkedList * linkedList) {
-    if (linkedList->node != NULL && linkedList->node->prev != NULL) {
+    if (linkedList != NULL && linkedList->node != NULL && linkedList->node->prev != NULL) {
         linkedList->node = linkedList->node->prev;
         return true;
     }
@@ -103,8 +117,8 @@ static void add(LinkedList * linkedList, void * data) {
 }
 
 static void addFirst(LinkedList * linkedList, void * data) {
-    linkedList->toStart(linkedList);
     if (linkedList != NULL) {
+        linkedList->toStart(linkedList);
         if (linkedList->node == NULL) {
             linkedList->node = (Node *) malloc(sizeof(Node));
             linkedList->node->data = data;
@@ -121,9 +135,9 @@ static void addFirst(LinkedList * linkedList, void * data) {
     }
 }
 
-static void addLast(LinkedList * list, void * data) {
-    list->toEnd(list);
-    add(list, data);
+static void addLast(LinkedList * linkedList, void * data) {
+    linkedList->toEnd(linkedList);
+    add(linkedList, data);
 }
 
 static void removeItem(LinkedList * linkedList) {
@@ -148,6 +162,16 @@ static bool hasPrevious(LinkedList * linkedList) {
 
 static bool hasNext(LinkedList * linkedList) {
     return linkedList != NULL && linkedList->node != NULL && linkedList->node->next != NULL;
+}
+
+static size_t size(LinkedList * linkedList) {
+    size_t size = 0;
+    if (linkedList == NULL || linkedList->node == NULL) return 0;
+    linkedList->toStart(linkedList);
+    do {
+        size++;
+    } while (linkedList->next(linkedList));
+    return size;
 }
 
 void dumpLinkedList(LinkedList * linkedList) {

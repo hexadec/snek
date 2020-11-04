@@ -8,7 +8,7 @@
 #include <stdbool.h>
 
 typedef enum Flags {
-    CURRENT = 0x00, BEGIN = 0x01, END = 0x02, EMPTY = 0x04
+    CURRENT = 0x00, BEGIN = 0x01, END = 0x02
 } Flags;
 
 typedef struct Node {
@@ -30,20 +30,10 @@ typedef struct LinkedList {
     void (*seek)(struct LinkedList *, int offset, Flags whence);
     bool (*hasNext)(struct LinkedList *);
     bool (*hasPrevious)(struct LinkedList *);
+    size_t (*size)(struct LinkedList *);
 } LinkedList;
 
 LinkedList * createLinkedList();
 void dumpLinkedList(LinkedList *);
-static bool next(LinkedList *);
-static bool prev(LinkedList *);
-static void toStart(LinkedList *);
-static void toEnd(LinkedList *);
-static void add(LinkedList *, void * data);
-static void addFirst(LinkedList *, void * data);
-static void addLast(LinkedList *, void * data);
-static void removeItem(LinkedList *);
-static void seek(LinkedList *, int offset, Flags whence);
-static bool hasNext(LinkedList *);
-static bool hasPrevious(LinkedList *);
 
 #endif //SNEK_LINKEDLIST_H
