@@ -23,9 +23,9 @@ typedef struct LinkedList {
     bool (*prev)(struct LinkedList *);
     void (*toStart)(struct LinkedList *);
     void (*toEnd)(struct LinkedList *);
-    void (*add)(struct LinkedList *, void * data);
-    void (*addFirst)(struct LinkedList *, void * data);
-    void (*addLast)(struct LinkedList *, void * data);
+    bool (*add)(struct LinkedList *, void * data);
+    bool (*addFirst)(struct LinkedList *, void * data);
+    bool (*addLast)(struct LinkedList *, void * data);
     void (*removeItem)(struct LinkedList *);
     void (*seek)(struct LinkedList *, int offset, Flags whence);
     bool (*hasNext)(struct LinkedList *);

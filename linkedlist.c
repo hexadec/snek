@@ -3,15 +3,16 @@
 //
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include "linkedlist.h"
 
 static bool next(LinkedList *);
 static bool prev(LinkedList *);
 static void toStart(LinkedList *);
 static void toEnd(LinkedList *);
-static void add(LinkedList *, void * data);
-static void addFirst(LinkedList *, void * data);
-static void addLast(LinkedList *, void * data);
+static bool add(LinkedList *, void * data);
+static bool addFirst(LinkedList *, void * data);
+static bool addLast(LinkedList *, void * data);
 static void removeItem(LinkedList *);
 static void seek(LinkedList *, int offset, Flags whence);
 static bool hasNext(LinkedList *);
@@ -95,49 +96,53 @@ static void seek(LinkedList * linkedList, int offset, Flags whence) {
     }
 }
 
-static void add(LinkedList * linkedList, void * data) {
-    if (linkedList != NULL) {
-        if (linkedList->node == NULL) {
-            linkedList->node = (Node *) malloc(sizeof(Node));
-            linkedList->node->data = data;
-            linkedList->node->next = NULL;
-            linkedList->node->prev = NULL;
-        } else {
-            Node * new = (Node *) malloc(sizeof(Node));
-            new->data = data;
-            new->prev = linkedList->node;
-            new->next = linkedList->node->next;
-            if (linkedList->node->next != NULL) {
-                linkedList->node->next->prev = new;
-            }
-            linkedList->node->next = new;
-            linkedList->node = new;
+static bool add(LinkedList * linkedList, void * data) {
+    if (linkedList == NULL) return false;
+    if (linkedList->node == NULL) {
+        linkedList->node = (Node *) malloc(sizeof(Node));
+        if (linkedList->node == NULL) return false;
+        linkedList->node->data = data;
+        linkedList->node->next = NULL;
+        linkedList->node->prev = NULL;
+    } else {
+        Node * new = (Node *) malloc(sizeof(Node));
+        if (new == NULL) return false;
+        new->data = data;
+        new->prev = linkedList->node;
+        new->next = linkedList->node->next;
+        if (linkedList->node->next != NULL) {
+            linkedList->node->next->prev = new;
         }
+        linkedList->node->next = new;
+        linkedList->node = new;
     }
+    return true;
 }
 
-static void addFirst(LinkedList * linkedList, void * data) {
-    if (linkedList != NULL) {
-        linkedList->toStart(linkedList);
-        if (linkedList->node == NULL) {
-            linkedList->node = (Node *) malloc(sizeof(Node));
-            linkedList->node->data = data;
-            linkedList->node->next = NULL;
-            linkedList->node->prev = NULL;
-        } else {
-            Node * new = (Node *) malloc(sizeof(Node));
-            new->data = data;
-            new->prev = NULL;
-            new->next = linkedList->node;
-            linkedList->node->prev = new;
-            linkedList->node = new;
-        }
+static bool addFirst(LinkedList * linkedList, void * data) {
+    if (linkedList == NULL) return false;
+    linkedList->toStart(linkedList);
+    if (linkedList->node == NULL) {
+        linkedList->node = (Node *) malloc(sizeof(Node));
+        if (linkedList->node == NULL) return false;
+        linkedList->node->data = data;
+        linkedList->node->next = NULL;
+        linkedList->node->prev = NULL;
+    } else {
+        Node * new = (Node *) malloc(sizeof(Node));
+        if (new == NULL) return false;
+        new->data = data;
+        new->prev = NULL;
+        new->next = linkedList->node;
+        linkedList->node->prev = new;
+        linkedList->node = new;
     }
+    return true;
 }
 
-static void addLast(LinkedList * linkedList, void * data) {
+static bool addLast(LinkedList * linkedList, void * data) {
     linkedList->toEnd(linkedList);
-    add(linkedList, data);
+    return add(linkedList, data);
 }
 
 static void removeItem(LinkedList * linkedList) {
