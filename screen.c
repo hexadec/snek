@@ -9,6 +9,7 @@
 #include "snek.h"
 
 static void drawFrame(const Snek *);
+static void drawSnake(const Snek *);
 
 static WINDOW * window;
 static int rows, cols;
@@ -16,10 +17,12 @@ static int rows, cols;
 void initializeScreen() {
     setlocale(LC_ALL, "");
     window = initscr();
+    curs_set(0);
     getmaxyx(window, rows, cols);
     start_color();
     init_pair(0, COLOR_WHITE, COLOR_BLACK);
     init_pair(1, COLOR_RED, COLOR_BLACK);
+    init_pair(2, COLOR_GREEN, COLOR_BLACK);
 }
 
 void closeScreen() {
@@ -27,7 +30,9 @@ void closeScreen() {
 }
 
 void drawGame(const Snek * snek) {
+    erase();
     drawFrame(snek);
+    drawSnake(snek);
     refresh();
 }
 
@@ -46,4 +51,15 @@ static void drawFrame(const Snek * snek) {
         mvaddstr(i, cols - 1, "▒");
     }
     attroff(COLOR_PAIR(0));
+}
+
+static void drawSnake(const Snek * snek) {
+    LinkedList * snake = snek->snake;
+    snake->toStart(snake);
+    attron(COLOR_PAIR(2));
+    do {
+        Point * point = snake->node->data;
+        mvaddstr(point->y, point->x, "▓");
+    } while (snake->next(snake));
+    attroff(COLOR_PAIR(2));
 }
