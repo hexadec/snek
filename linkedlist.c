@@ -21,6 +21,7 @@ static size_t size(LinkedList *);
 
 LinkedList * createLinkedList() {
     LinkedList * new = malloc(sizeof (LinkedList));
+    if (new == NULL) return NULL;
     new->node = NULL;
     new->next = &next;
     new->prev = &prev;
@@ -157,6 +158,7 @@ static void removeItem(LinkedList * linkedList) {
             linkedList->node = old->next;
             linkedList->node->prev = old->prev;
         }
+        free(old->data);
         free(old);
     }
 }

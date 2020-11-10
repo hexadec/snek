@@ -9,13 +9,14 @@
 
 typedef enum {UP, DOWN, LEFT, RIGHT} Direction;
 
-typedef struct {
+typedef struct Point {
     int x, y;
 } Point;
 
 typedef struct {
     int score, highscore;
-    Direction * direction;
+    Direction direction;
+    Point * food;
     LinkedList * snake;
 } Snek;
 
