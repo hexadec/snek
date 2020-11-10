@@ -2,12 +2,16 @@
 #include <time.h>
 #include "snek.h"
 #include "screen.h"
+#include "debugmalloc.h"
 
 bool stepGame(Snek *);
 void addNewHead(Snek *);
 void placeNewFood(Snek *);
+void gameLoop(Snek *);
+void initGame(Snek *);
 bool isGameOver(const Snek *);
 bool isPointInSnake(const Snek *, int, int, bool);
+void endGame(Snek * snek);
 
 void mallocError();
 
@@ -15,44 +19,52 @@ int main() {
     srand(time(0));
     initializeScreen();
     Snek snek;
-    snek.highscore = 1000;
-    snek.score = 1;
-    snek.snake = createLinkedList();
-    snek.direction = UP;
+    initGame(&snek);
+    gameLoop(&snek);
+    readCharacter(-1);
+    endGame(&snek);
+    return 0;
+}
+
+void initGame(Snek * snek) {
+    snek->highscore = 1000;
+    snek->score = 1;
+    snek->snake = createLinkedList();
+    if (snek->snake == NULL) mallocError();
+    snek->direction = UP;
     Point * first = malloc(sizeof(Point));
     first->x = getColumns() / 2;
     first->y = getRows() / 2;
-    snek.snake->addFirst(snek.snake, first);
-    if (snek.snake == NULL) mallocError();
-    snek.food = malloc(sizeof(Point));
-    placeNewFood(&snek);
+    snek->snake->addFirst(snek->snake, first);
+    snek->food = malloc(sizeof(Point));
+    placeNewFood(snek);
+}
+
+void gameLoop(Snek * snek) {
     do {
-        drawGame(&snek);
+        drawGame(snek);
         char dir = readCharacter(750);
         switch (dir) {
             case 'w':
-                if (snek.direction != DOWN)
-                    snek.direction = UP;
+                if (snek->direction != DOWN)
+                    snek->direction = UP;
                 break;
             case 'a':
-                if (snek.direction != RIGHT)
-                    snek.direction = LEFT;
+                if (snek->direction != RIGHT)
+                    snek->direction = LEFT;
                 break;
             case 's':
-                if (snek.direction != UP)
-                    snek.direction = DOWN;
+                if (snek->direction != UP)
+                    snek->direction = DOWN;
                 break;
             case 'd':
-                if (snek.direction != LEFT)
-                    snek.direction = RIGHT;
+                if (snek->direction != LEFT)
+                    snek->direction = RIGHT;
                 break;
             default:
                 break;
         }
-    } while (stepGame(&snek));
-    readCharacter(-1);
-    closeScreen();
-    return 0;
+    } while (stepGame(snek));
 }
 
 bool stepGame(Snek * snek) {
@@ -132,6 +144,12 @@ bool isPointInSnake(const Snek * snek, int x, int y, bool ignore_head) {
             return true;
     } while (snake->next(snake));
     return false;
+}
+
+void endGame(Snek * snek) {
+    closeScreen();
+    dumpLinkedList(snek->snake);
+    free(snek->food);
 }
 
 void mallocError(){

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "linkedlist.h"
+#include "debugmalloc.h"
 
 static bool next(LinkedList *);
 static bool prev(LinkedList *);
