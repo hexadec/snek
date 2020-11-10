@@ -21,6 +21,7 @@ int main() {
     Snek snek;
     initGame(&snek);
     gameLoop(&snek);
+    drawGameOver();
     readCharacter(-1);
     endGame(&snek);
     return 0;

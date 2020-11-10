@@ -4,6 +4,7 @@
 
 #include <ncursesw/curses.h>
 #include <string.h>
+#include <time.h>
 #include <locale.h>
 #include "screen.h"
 #include "snek.h"
@@ -14,6 +15,9 @@ static void drawFood(const Snek *);
 
 static WINDOW * window;
 static int rows, columns;
+enum TEXT_FORMATS {
+        WHITE_BLACK, RED_BLACK, GREEN_BLACK, BLACK_BLACK
+};
 
 void initializeScreen() {
     setlocale(LC_ALL, "");
@@ -22,9 +26,10 @@ void initializeScreen() {
     curs_set(0);
     getmaxyx(window, rows, columns);
     start_color();
-    init_pair(0, COLOR_WHITE, COLOR_BLACK);
-    init_pair(1, COLOR_RED, COLOR_BLACK);
-    init_pair(2, COLOR_GREEN, COLOR_BLACK);
+    init_pair(WHITE_BLACK, COLOR_WHITE, COLOR_BLACK);
+    init_pair(RED_BLACK, COLOR_RED, COLOR_BLACK);
+    init_pair(GREEN_BLACK, COLOR_GREEN, COLOR_BLACK);
+    init_pair(BLACK_BLACK, COLOR_BLACK, COLOR_BLACK);
 }
 
 void closeScreen() {
@@ -56,8 +61,21 @@ void print_error(const char * error) {
     perror(error);
 }
 
+void drawGameOver() {
+    char game_over[] = "GAME OVER";
+    attron(A_BOLD);
+    for (int i = 0; i < 10; i++) {
+        attron(i % 2 == 0 ? COLOR_PAIR(BLACK_BLACK) : COLOR_PAIR(RED_BLACK));
+        mvaddstr((int) (rows / 2), (int) (columns / 2 - strlen(game_over) / 2), game_over);
+        attroff(i % 2 == 0 ? COLOR_PAIR(BLACK_BLACK) : COLOR_PAIR(RED_BLACK));
+        refresh();
+        nanosleep(&(const struct timespec){0, 5E8}, NULL);
+    }
+    attroff(A_BOLD);
+}
+
 static void drawFrame(const Snek * snek) {
-    attron(COLOR_PAIR(0));
+    attron(COLOR_PAIR(WHITE_BLACK));
     char status[50];
     sprintf(status, "SCORE%6d        HIGHSCORE%6d", snek->score, snek->highscore);
     wmove(window, 0, (int) (columns / 2 - strlen(status) / 2));
@@ -70,22 +88,22 @@ static void drawFrame(const Snek * snek) {
         mvaddstr(i, 0, "▒");
         mvaddstr(i, columns - 1, "▒");
     }
-    attroff(COLOR_PAIR(0));
+    attroff(COLOR_PAIR(WHITE_BLACK));
 }
 
 static void drawFood(const Snek * snek) {
-    attron(COLOR_PAIR(1));
+    attron(COLOR_PAIR(RED_BLACK));
     mvaddstr(snek->food->y, snek->food->x, "●");
-    attroff(COLOR_PAIR(1));
+    attroff(COLOR_PAIR(RED_BLACK));
 }
 
 static void drawSnake(const Snek * snek) {
     LinkedList * snake = snek->snake;
     snake->toStart(snake);
-    attron(COLOR_PAIR(2));
+    attron(COLOR_PAIR(GREEN_BLACK));
     do {
         Point * point = snake->node->data;
         mvaddstr(point->y, point->x, "▓");
     } while (snake->next(snake));
-    attroff(COLOR_PAIR(2));
+    attroff(COLOR_PAIR(GREEN_BLACK));
 }

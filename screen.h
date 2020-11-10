@@ -14,5 +14,6 @@ int getRows();
 int getColumns();
 char readCharacter(int);
 void print_error(const char *);
+void drawGameOver();
 
 #endif //SNEK_SCREEN_H
