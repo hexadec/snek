@@ -1,5 +1,5 @@
 /**
- * Source: https://infoc.eet.bme.hu/debugmalloc/debugmalloc.h
+ * Original source: https://infoc.eet.bme.hu/debugmalloc/debugmalloc.h
  */
 #ifndef DEBUGMALLOC_H
 #define DEBUGMALLOC_H
@@ -16,10 +16,10 @@
 enum {
     /* size of canary in bytes. should be multiple of largest alignment
      * required by any data type (usually 8 or 16) */
-    debugmalloc_canary_size = 64,
+    debugmalloc_canary_size = 32,
 
     /* canary byte */
-    debugmalloc_canary_char = 'K',
+    debugmalloc_canary_char = 'C',
 
     /* hash table size for allocated entries */
     debugmalloc_tablesize = 256,
@@ -69,6 +69,8 @@ typedef struct DebugmallocData {
     long max_block_size;  /* max size of a single block allocated */
     long alloc_count;     /* currently allocated; decreased with free */
     long long alloc_bytes;
+    long long max_alloc_bytes; /* max total memory used at one time */
+    long long max_alloc_count; /* max total blocks used at one time */
     long all_alloc_count; /* all allocations, never decreased */
     long long all_alloc_bytes;
     DebugmallocEntry head[debugmalloc_tablesize], tail[debugmalloc_tablesize];  /* head and tail elements of allocation lists */
@@ -105,7 +107,7 @@ static DebugmallocData * debugmalloc_singleton(void) {
             /* another copy of this function already created it. */
             int ok = sscanf(envptr, "%p", &instance);
             if (ok != 1) {
-                fprintf(stderr, "debugmalloc: nem lehet ertelmezni: %s!\n", envptr);
+                fprintf(stderr, "debugmalloc: failed to interpret: %s!\n", envptr);
                 abort();
             }
         }
@@ -148,7 +150,7 @@ static void debugmalloc_log(char const *format, ...) {
         f = fopen(instance->logfile, "at");
         if (f == NULL) {
             f = stderr;
-            fprintf(stderr, "debugmalloc: nem tudom megnyitni a %s fajlt irasra!\n", instance->logfile);
+            fprintf(stderr, "debugmalloc: %s cannot be opened for write!\n", instance->logfile);
             debugmalloc_strlcpy(instance->logfile, "", sizeof(instance->logfile));
         }
     }
@@ -224,21 +226,21 @@ static void debugmalloc_dump_memory(char const *mem, size_t size) {
 static void debugmalloc_dump_elem(DebugmallocEntry const *elem) {
     bool canary_ok = debugmalloc_canary_ok(elem);
 
-    debugmalloc_log("  %p, %u bajt, kanari: %s\n"
+    debugmalloc_log("  %p, %u byte, canary: %s\n"
                     "  %s:%u, %s(%s)\n",
-                    elem->user_mem, (unsigned) elem->size, canary_ok ? "ok" : "**SERULT**",
+                    elem->user_mem, (unsigned) elem->size, canary_ok ? "ok" : "**BROKEN**",
                     elem->file, elem->line,
                     elem->func, elem->expr);
 
     if (!canary_ok) {
-        debugmalloc_log("    ELOTTE kanari: \n");
+        debugmalloc_log("    canary BEFORE: \n");
         debugmalloc_dump_memory((char const *) elem->real_mem, debugmalloc_canary_size);
     }
 
     debugmalloc_dump_memory((char const *) elem->user_mem, elem->size > 64 ? 64 : elem->size);
 
     if (!canary_ok) {
-        debugmalloc_log("    UTANA kanari: \n");
+        debugmalloc_log("    canary AFTER: \n");
         debugmalloc_dump_memory((char const *) elem->real_mem + debugmalloc_canary_size + elem->size, debugmalloc_canary_size);
     }
 }
@@ -253,11 +255,11 @@ static void debugmalloc_dump(void) {
         DebugmallocEntry *head = &instance->head[i];
         for (DebugmallocEntry *iter = head->next; iter->next != NULL; iter = iter->next) {
             ++cnt;
-            debugmalloc_log("** %d/%d. rekord:\n", cnt, instance->alloc_count);
+            debugmalloc_log("** %d/%d. record:\n", cnt, instance->alloc_count);
             debugmalloc_dump_elem(iter);
         }
     }
-    debugmalloc_log("** DEBUGMALLOC DUMP VEGE *******************************\n");
+    debugmalloc_log("** DEBUGMALLOC DUMP END *******************************\n");
 }
 
 
@@ -269,16 +271,18 @@ static void debugmalloc_atexit_dump(void) {
     if (instance->alloc_count > 0) {
         debugmalloc_log("\n"
                         "********************************************************\n"
-                        "* MEMORIASZIVARGAS VAN A PROGRAMBAN!!!\n"
+                        "* MEMORY LEAK FOUND!!!\n"
                         "********************************************************\n"
                         "\n");
         debugmalloc_dump();
     } else {
         debugmalloc_log("****************************************************\n"
-                        "* Debugmalloc: nincs memoriaszivargas a programban.\n"
-                        "* Osszes foglalas: %d blokk, %d bajt.\n"
+                        "* Debugmalloc: no memory leaks were found.\n"
+                        "* Allocated: %d blocks, %d bytes.\n"
+                        "* Maximum memory used: %d blocks, %d bytes.\n"
                         "****************************************************\n",
-                        instance->all_alloc_count, instance->all_alloc_bytes);
+                        instance->all_alloc_count, instance->all_alloc_bytes,
+                        instance->max_alloc_count, instance->max_alloc_bytes);
     }
 }
 
@@ -303,6 +307,10 @@ static void debugmalloc_insert(DebugmallocEntry *entry) {
     head->next = entry;
     instance->alloc_count += 1;
     instance->alloc_bytes += entry->size;
+    if (instance->alloc_bytes > instance->max_alloc_bytes)
+        instance->max_alloc_bytes = instance->alloc_bytes;
+    if (instance->alloc_count > instance->max_alloc_count)
+        instance->max_alloc_count = instance->alloc_count;
     instance->all_alloc_count += 1;
     instance->all_alloc_bytes += entry->size;
 }
@@ -341,14 +349,14 @@ static void *debugmalloc_malloc_full(size_t size, char const *func, char const *
     DebugmallocData *instance = debugmalloc_singleton();
     //This line had to have been modified by the owner of this repo
     if ((long) size > instance->max_block_size) {
-        debugmalloc_log("debugmalloc: %s @ %s:%u: a blokk merete tul nagy, %u bajt; debugmalloc_max_block_size() fuggvennyel novelheto.\n", func, file, line, (unsigned) size);
+        debugmalloc_log("debugmalloc: %s @ %s:%u: block size too large, %u bajt; use debugmalloc_max_block_size().\n", func, file, line, (unsigned) size);
         abort();
     }
 
     /* allocate more memory, make room for canary */
     void *real_mem = malloc(size + 2 * debugmalloc_canary_size);
     if (real_mem == NULL) {
-        debugmalloc_log("debugmalloc: %s @ %s:%u: nem sikerult %u meretu memoriat foglalni!\n", func, file, line, (unsigned) size);
+        debugmalloc_log("debugmalloc: %s @ %s:%u: failed to allocate memory of size %u!\n", func, file, line, (unsigned) size);
         return NULL;
     }
 
@@ -356,7 +364,7 @@ static void *debugmalloc_malloc_full(size_t size, char const *func, char const *
     DebugmallocEntry *newentry = (DebugmallocEntry *) malloc(sizeof(DebugmallocEntry));
     if (newentry == NULL) {
         free(real_mem);
-        debugmalloc_log("debugmalloc: %s @ %s:%u: le tudtam foglalni %u memoriat, de utana a sajatnak nem, sry\n", func, file, line, (unsigned) size);
+        debugmalloc_log("debugmalloc: %s @ %s:%u: debugmalloc just broke your program, consider removing it\n", func, file, line, (unsigned) size);
         abort();
     }
 
@@ -402,13 +410,13 @@ static void debugmalloc_free_full(void *mem, char const *func, char const *file,
     /* find allocation, abort if not found */
     DebugmallocEntry *deleted = debugmalloc_find(mem);
     if (deleted == NULL) {
-        debugmalloc_log("debugmalloc: %s @ %s:%u: olyan teruletet probalsz felszabaditani, ami nincs lefoglalva!\n", func, file, line);
+        debugmalloc_log("debugmalloc: %s @ %s:%u: cannot free unallocated memory!\n", func, file, line);
         abort();
     }
 
     /* check canary and then free memory */
     if (!debugmalloc_canary_ok(deleted)) {
-        debugmalloc_log("debugmalloc: %s @ %s:%u: a %p memoriateruletet tulindexelted!\n", func, file, line, mem);
+        debugmalloc_log("debugmalloc: %s @ %s:%u: overflow at %p!\n", func, file, line, mem);
         debugmalloc_dump_elem(deleted);
     }
     debugmalloc_free_inner(deleted);
@@ -429,14 +437,14 @@ static void *debugmalloc_realloc_full(void *oldmem, size_t newsize, char const *
     /* find old allocation. abort if not found. */
     DebugmallocEntry *oldentry = debugmalloc_find(oldmem);
     if (oldentry == NULL) {
-        debugmalloc_log("debugmalloc: %s @ %s:%u: olyan teruletet probalsz atmeretezni, ami nincs lefoglalva!\n", func, file, line);
+        debugmalloc_log("debugmalloc: %s @ %s:%u: cannot resize unallocated memory!\n", func, file, line);
         abort();
     }
 
     /* create new allocation, copy & free old data */
     void *newmem = debugmalloc_malloc_full(newsize, func, expr, file, line, false);
     if (newmem == NULL) {
-        debugmalloc_log("debugmalloc: %s @ %s:%u: nem sikerult uj memoriat foglalni az atmeretezeshez!\n", func, file, line);
+        debugmalloc_log("debugmalloc: %s @ %s:%u: could not allocate memory for resize!\n", func, file, line);
         /* imitate standard realloc: original block is untouched, but return NULL */
         return NULL;
     }
@@ -452,11 +460,11 @@ static void *debugmalloc_realloc_full(void *oldmem, size_t newsize, char const *
 static DebugmallocData * debugmalloc_create(void) {
     /* config check */
     if (debugmalloc_canary_size % 16 != 0) {
-        debugmalloc_log("debugmalloc: a kanari merete legyen 16-tal oszthato\n");
+        debugmalloc_log("debugmalloc: canary size should be divisible by 16\n");
         abort();
     }
     if (debugmalloc_canary_char == 0) {
-        debugmalloc_log("debugmalloc: a kanari legyen 0-tol kulonbozo\n");
+        debugmalloc_log("debugmalloc: canary should be greater than 0\n");
         abort();
     }
     /* avoid compiler warning if these functions are not used */
@@ -467,7 +475,7 @@ static DebugmallocData * debugmalloc_create(void) {
     /* create and initialize instance */
     DebugmallocData *instance = (DebugmallocData *) malloc(sizeof(DebugmallocData));
     if (instance == NULL) {
-        debugmalloc_log("debugmalloc: nem sikerult elinditani a memoriakezelest\n");
+        debugmalloc_log("debugmalloc: failed to start debugmalloc\n");
         abort();
     }
     debugmalloc_strlcpy(instance->logfile, "", sizeof(instance->logfile));
@@ -476,6 +484,8 @@ static DebugmallocData * debugmalloc_create(void) {
     instance->alloc_bytes = 0;
     instance->all_alloc_count = 0;
     instance->all_alloc_bytes = 0;
+    instance->max_alloc_bytes = 0;
+    instance->max_alloc_count = 0;
     for (size_t i = 0; i < debugmalloc_tablesize; i++) {
         instance->head[i].prev = NULL;
         instance->head[i].next = &instance->tail[i];

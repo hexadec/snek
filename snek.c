@@ -34,10 +34,12 @@ void initGame(Snek * snek) {
     if (snek->snake == NULL) mallocError();
     snek->direction = UP;
     Point * first = malloc(sizeof(Point));
+    if (first == NULL) mallocError();
     first->x = getColumns() / 2;
     first->y = getRows() / 2;
     snek->snake->addFirst(snek->snake, first);
     snek->food = malloc(sizeof(Point));
+    if (snek->food == NULL) mallocError();
     placeNewFood(snek);
 }
 
