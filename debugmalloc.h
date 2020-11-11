@@ -118,10 +118,13 @@ static DebugmallocData * debugmalloc_singleton(void) {
 
 
 /* better version of strncpy, always terminates string with \0. */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
 static void debugmalloc_strlcpy(char *dest, char const *src, size_t destsize) {
     strncpy(dest, src, destsize);
     dest[destsize - 1] = '\0';
 }
+#pragma GCC diagnostic pop
 
 
 /* set the name of the log file for debugmalloc. empty filename
