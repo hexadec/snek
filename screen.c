@@ -64,7 +64,7 @@ void print_error(const char * error) {
 void drawGameOver() {
     char game_over[] = "GAME OVER";
     attron(A_BOLD);
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 6; i++) {
         attron(i % 2 == 0 ? COLOR_PAIR(BLACK_BLACK) : COLOR_PAIR(RED_BLACK));
         mvaddstr((int) (rows / 2), (int) (columns / 2 - strlen(game_over) / 2), game_over);
         attroff(i % 2 == 0 ? COLOR_PAIR(BLACK_BLACK) : COLOR_PAIR(RED_BLACK));

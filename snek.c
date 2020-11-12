@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <time.h>
+#include <sys/random.h>
 #include "snek.h"
 #include "screen.h"
 #include "debugmalloc.h"
@@ -16,7 +16,6 @@ void endGame(Snek * snek);
 void mallocError();
 
 int main() {
-    srand(time(0));
     initializeScreen();
     Snek snek;
     initGame(&snek);
@@ -116,8 +115,11 @@ void addNewHead(Snek * snek) {
 void placeNewFood(Snek * snek) {
     int x, y;
     do {
-        x = rand() % (getColumns() - 2) + 1;
-        y = rand() % (getRows() - 3) + 2;
+        unsigned int coords[2];
+        //Generate cryptographically secure random numbers (for fun) (syscall!)
+        getrandom(&coords, 2 * sizeof(unsigned int), GRND_RANDOM);
+        x = (int) (coords[0] % (getColumns() - 2) + 1);
+        y = (int) (coords[1] % (getRows() - 3) + 2);
     } while (isPointInSnake(snek, x, y, false));
     snek->food->x = x;
     snek->food->y = y;
