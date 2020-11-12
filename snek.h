@@ -18,6 +18,7 @@ typedef struct {
     Direction direction;
     Point * food;
     LinkedList * snake;
+    char * player_name;
 } Snek;
 
 #endif //SNEK_SNEK_H

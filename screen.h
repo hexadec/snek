@@ -12,7 +12,7 @@ void initializeScreen();
 void closeScreen();
 int getRows();
 int getColumns();
-char readCharacter(int);
+char readCharacter(long);
 void print_error(const char *);
 void drawGameOver();
 

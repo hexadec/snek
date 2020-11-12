@@ -25,6 +25,7 @@ void initializeScreen() {
     noecho();
     curs_set(0);
     getmaxyx(window, rows, columns);
+    keypad(window, true);
     start_color();
     init_pair(WHITE_BLACK, COLOR_WHITE, COLOR_BLACK);
     init_pair(RED_BLACK, COLOR_RED, COLOR_BLACK);
@@ -33,6 +34,7 @@ void initializeScreen() {
 }
 
 void closeScreen() {
+    flushinp();
     endwin();
 }
 
@@ -52,9 +54,13 @@ int getColumns() {
     return columns;
 }
 
-char readCharacter(int timeout_ms) {
+char readCharacter(long timeout_ms) {
     timeout(timeout_ms);
-    return getch();
+    char key = getch();
+    if (key == ERR)
+        return -1;
+    flushinp();
+    return key;
 }
 
 void print_error(const char * error) {

@@ -1,8 +1,10 @@
 #include <stdlib.h>
 #include <sys/random.h>
+#include <time.h>
 #include "snek.h"
 #include "screen.h"
 #include "debugmalloc.h"
+#include "fileio.h"
 
 bool stepGame(Snek *);
 void addNewHead(Snek *);
@@ -27,9 +29,10 @@ int main() {
 }
 
 void initGame(Snek * snek) {
-    snek->highscore = 1000;
+    snek->highscore = getHighscore("Józsi");
     snek->score = 1;
     snek->snake = createLinkedList();
+    snek->player_name = "Józsi";
     if (snek->snake == NULL) mallocError();
     snek->direction = UP;
     Point * first = malloc(sizeof(Point));
@@ -43,9 +46,14 @@ void initGame(Snek * snek) {
 }
 
 void gameLoop(Snek * snek) {
+    struct timespec start, end;
+    long remainder = 0;
+    bool continue_game = true;
     do {
-        drawGame(snek);
-        char dir = readCharacter(750);
+        if (!remainder)
+            drawGame(snek);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+        char dir = readCharacter(remainder == 0 ? 750 : remainder);
         switch (dir) {
             case 'w':
                 if (snek->direction != DOWN)
@@ -63,10 +71,19 @@ void gameLoop(Snek * snek) {
                 if (snek->direction != LEFT)
                     snek->direction = RIGHT;
                 break;
-            default:
+            case -1:
+                //No button was pressed
                 break;
+            default:
+                //A button other than a control button has been pressed
+                //Go to next iteration, but allow steps to occur at the same time
+                clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+                remainder = (remainder == 0 ? 750 : remainder) - ((end.tv_sec - start.tv_sec) * 1000L + (end.tv_nsec - start.tv_nsec) / (long) 1E6);
+                continue;
         }
-    } while (stepGame(snek));
+        remainder = 0;
+        continue_game = stepGame(snek);
+    } while (continue_game);
 }
 
 bool stepGame(Snek * snek) {
@@ -153,6 +170,7 @@ bool isPointInSnake(const Snek * snek, int x, int y, bool ignore_head) {
 
 void endGame(Snek * snek) {
     closeScreen();
+    saveScore(snek->player_name, snek->score);
     dumpLinkedList(snek->snake);
     free(snek->food);
 }
