@@ -7,8 +7,8 @@
 
 #include "snek.h"
 
-void drawGame(const Snek * snek);
-void initializeScreen();
+void drawGame();
+void initializeScreen(const Snek * snek);
 void closeScreen();
 int getRows();
 int getColumns();

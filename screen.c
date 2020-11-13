@@ -6,12 +6,15 @@
 #include <string.h>
 #include <time.h>
 #include <locale.h>
+#include <signal.h>
+#include <stdlib.h>
 #include "screen.h"
 #include "snek.h"
 
-static void drawFrame(const Snek *);
-static void drawSnake(const Snek *);
-static void drawFood(const Snek *);
+static void drawFrame();
+static void drawSnake();
+static void drawFood();
+static void windowResizeHandler(__attribute__((unused)) int);
 
 static WINDOW * window;
 static int rows, columns;
@@ -19,7 +22,10 @@ enum TEXT_FORMATS {
         WHITE_BLACK, RED_BLACK, GREEN_BLACK, BLACK_BLACK
 };
 
-void initializeScreen() {
+const Snek * snek;
+
+void initializeScreen(const Snek * game) {
+    snek = game;
     setlocale(LC_ALL, "");
     window = initscr();
     noecho();
@@ -31,6 +37,17 @@ void initializeScreen() {
     init_pair(RED_BLACK, COLOR_RED, COLOR_BLACK);
     init_pair(GREEN_BLACK, COLOR_GREEN, COLOR_BLACK);
     init_pair(BLACK_BLACK, COLOR_BLACK, COLOR_BLACK);
+    static struct sigaction signal_handler;
+    memset(&signal_handler, 0, sizeof(struct sigaction));
+    signal_handler.sa_handler = windowResizeHandler;
+    sigaction(SIGWINCH, &signal_handler, NULL);
+}
+
+static void windowResizeHandler(__attribute__((unused)) int signal) {
+    endwin();
+    printf("Game aborted due to terminal resize\n");
+    endGame(snek);
+    exit(-1);
 }
 
 void closeScreen() {
@@ -38,7 +55,7 @@ void closeScreen() {
     endwin();
 }
 
-void drawGame(const Snek * snek) {
+void drawGame() {
     erase();
     drawFrame(snek);
     drawFood(snek);
@@ -80,7 +97,7 @@ void drawGameOver() {
     attroff(A_BOLD);
 }
 
-static void drawFrame(const Snek * snek) {
+static void drawFrame() {
     attron(COLOR_PAIR(WHITE_BLACK));
     char status[50];
     sprintf(status, "SCORE%6d        HIGHSCORE%6d", snek->score, snek->highscore);
@@ -97,13 +114,13 @@ static void drawFrame(const Snek * snek) {
     attroff(COLOR_PAIR(WHITE_BLACK));
 }
 
-static void drawFood(const Snek * snek) {
+static void drawFood() {
     attron(COLOR_PAIR(RED_BLACK));
     mvaddstr(snek->food->y, snek->food->x, "●");
     attroff(COLOR_PAIR(RED_BLACK));
 }
 
-static void drawSnake(const Snek * snek) {
+static void drawSnake() {
     LinkedList * snake = snek->snake;
     snake->toStart(snake);
     attron(COLOR_PAIR(GREEN_BLACK));

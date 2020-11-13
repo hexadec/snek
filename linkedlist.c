@@ -1,6 +1,8 @@
-//
-// Created by hexadec on 11/3/20.
-//
+/**
+ * \file linkedlist.c
+ * \author hexadec
+ * \brief This file contains the logic required to work with linked lists
+ */
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -20,6 +22,10 @@ static bool hasNext(LinkedList *);
 static bool hasPrevious(LinkedList *);
 static size_t size(LinkedList *);
 
+/**
+ * Creates a LinkedList instance
+ * @return a LinkedList instance
+ */
 LinkedList * createLinkedList() {
     LinkedList * new = malloc(sizeof (LinkedList));
     if (new == NULL) return NULL;
@@ -39,6 +45,11 @@ LinkedList * createLinkedList() {
     return new;
 }
 
+/**
+ * Steps the linked list to its next node
+ * @param linkedList LinkedList instance to work with
+ * @return true on success, false otherwise
+ */
 static bool next(LinkedList * linkedList) {
     if (linkedList != NULL && linkedList->node != NULL && linkedList->node->next != NULL) {
         linkedList->node = linkedList->node->next;
@@ -47,6 +58,11 @@ static bool next(LinkedList * linkedList) {
     return false;
 }
 
+/**
+ * Steps the linked list to its previous node
+ * @param linkedList LinkedList instance to work with
+ * @return true on success, false otherwise
+ */
 static bool prev(LinkedList * linkedList) {
     if (linkedList != NULL && linkedList->node != NULL && linkedList->node->prev != NULL) {
         linkedList->node = linkedList->node->prev;
@@ -55,6 +71,10 @@ static bool prev(LinkedList * linkedList) {
     return false;
 }
 
+/**
+ * Steps the linked list to its first node
+ * @param linkedList LinkedList instance to work with
+ */
 static void toStart(LinkedList * linkedList) {
     if (linkedList != NULL && linkedList->node != NULL) {
         while (linkedList->node->prev != NULL)
@@ -62,6 +82,10 @@ static void toStart(LinkedList * linkedList) {
     }
 }
 
+/**
+ * Steps the linked list to its last node
+ * @param linkedList LinkedList instance to work with
+ */
 static void toEnd(LinkedList * linkedList) {
     if (linkedList != NULL && linkedList->node != NULL) {
         while (linkedList->node->next != NULL)
@@ -69,6 +93,12 @@ static void toEnd(LinkedList * linkedList) {
     }
 }
 
+/**
+ * Moves the node of the linked list
+ * @param linkedList LinkedList instance to work with
+ * @param offset number of nodes to move
+ * @param whence sets whether to move from current position, start or end
+ */
 static void seek(LinkedList * linkedList, int offset, Flags whence) {
     if (linkedList != NULL && linkedList->node != NULL) {
         int position = 0;
@@ -98,6 +128,13 @@ static void seek(LinkedList * linkedList, int offset, Flags whence) {
     }
 }
 
+/**
+ * Adds a new node to the linked list after its current position
+ * and sets the node to the newly added one
+ * @param linkedList LinkedList instance to work with
+ * @param data pointer to data to hold
+ * @return true on success, false otherwise
+ */
 static bool add(LinkedList * linkedList, void * data) {
     if (linkedList == NULL) return false;
     if (linkedList->node == NULL) {
@@ -121,6 +158,13 @@ static bool add(LinkedList * linkedList, void * data) {
     return true;
 }
 
+/**
+ * Adds a new node to the start of the linked list
+ * and sets the node to the newly added one
+ * @param linkedList LinkedList instance to work with
+ * @param data pointer to data to hold
+ * @return true on success, false otherwise
+ */
 static bool addFirst(LinkedList * linkedList, void * data) {
     if (linkedList == NULL) return false;
     linkedList->toStart(linkedList);
@@ -142,11 +186,23 @@ static bool addFirst(LinkedList * linkedList, void * data) {
     return true;
 }
 
+/**
+ * Adds a new node to the end of the linked list
+ * and sets the node to the newly added one
+ * @param linkedList LinkedList instance to work with
+ * @param data pointer to data to hold
+ * @return true on success, false otherwise
+ */
 static bool addLast(LinkedList * linkedList, void * data) {
     linkedList->toEnd(linkedList);
     return add(linkedList, data);
 }
 
+/**
+ * Removed current node from the linked list
+ * frees memory pointed by node.data and frees node
+ * @param linkedList LinkedList instance to work with
+ */
 static void removeItem(LinkedList * linkedList) {
     if (linkedList != NULL && linkedList->node != NULL) {
         Node * old = linkedList->node;
@@ -164,14 +220,29 @@ static void removeItem(LinkedList * linkedList) {
     }
 }
 
+/**
+ * Checks if the linked list has a previous node
+ * @param linkedList LinkedList instance to work with
+ * @return true if there is a previous node, that is not NULL, false otherwise
+ */
 static bool hasPrevious(LinkedList * linkedList) {
     return linkedList != NULL && linkedList->node != NULL && linkedList->node->prev != NULL;
 }
 
+/**
+ * Checks if the linked list has a next node
+ * @param linkedList LinkedList instance to work with
+ * @return true if there is a next node, that is not NULL, false otherwise
+ */
 static bool hasNext(LinkedList * linkedList) {
     return linkedList != NULL && linkedList->node != NULL && linkedList->node->next != NULL;
 }
 
+/**
+ * Calculates the size of the linked list, and sets the current node to the final position
+ * @param linkedList LinkedList instance to work with
+ * @return number of nodes in \p linkedList
+ */
 static size_t size(LinkedList * linkedList) {
     size_t size = 0;
     if (linkedList == NULL || linkedList->node == NULL) return 0;
@@ -182,6 +253,11 @@ static size_t size(LinkedList * linkedList) {
     return size;
 }
 
+/**
+ * Frees all memory used by \p linkedList
+ * Uses removeItem to remove all items and then frees the memory used by the instance as well
+ * @param linkedList LinkedList instance to work with
+ */
 void dumpLinkedList(LinkedList * linkedList) {
     while (linkedList != NULL && linkedList->node != NULL)
         removeItem(linkedList);
