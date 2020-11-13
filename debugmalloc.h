@@ -286,7 +286,7 @@ static void debugmalloc_atexit_dump(void) {
         debugmalloc_log("****************************************************\n"
                         "* Debugmalloc: no memory leaks were found.\n"
                         "* Allocated: %d blocks, %d bytes.\n"
-                        "* Maximum memory used: %d blocks, %d bytes.\n"
+                        "* Maximum memory used: %d blocks, %d bytes. %d\n"
                         "****************************************************\n",
                         instance->all_alloc_count, instance->all_alloc_bytes,
                         instance->max_alloc_count, instance->max_alloc_bytes);

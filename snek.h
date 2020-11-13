@@ -10,20 +10,25 @@
 typedef enum {UP, DOWN, LEFT, RIGHT} Direction;
 
 /**
- * Structure to hold positions on a 2D plane
+ * @brief Structure to hold positions in a 2D plane
  */
 typedef struct Point {
     int x, y;
 } Point;
 
-/**
- * Structure to hold all important parameters of the game
- */
+/** @brief Structure to hold all important parameters of the game */
 typedef struct {
-    int score, highscore;
+    /** @brief Current score of the current player */
+    int score;
+    /** @brief Highscore of current player */
+    int highscore;
+    /** @brief Direction in which the snake is moving */
     Direction direction;
+    /** @brief Position of the snake's food */
     Point * food;
+    /** @brief \p LinkedList containing the positions of the snake */
     LinkedList * snake;
+    /** @brief nickname of current player */
     char * player_name;
 } Snek;
 

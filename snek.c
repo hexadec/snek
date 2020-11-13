@@ -75,7 +75,7 @@ void gameLoop(Snek * snek) {
         if (!remainder)
             drawGame(snek);
         clock_gettime(CLOCK_MONOTONIC_RAW, &start);
-        char dir = readCharacter(remainder == 0 ? 750 : remainder);
+        int dir = readCharacter(remainder == 0 ? 750 : remainder);
         switch (dir) {
             case 'w':
                 if (snek->direction != DOWN)

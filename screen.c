@@ -1,6 +1,8 @@
-//
-// Created by hexadec on 11/3/20.
-//
+/**
+ * \file screen.c
+ * \author hexadec
+ * \brief This file is responsible for graphics and user interaction
+ */
 
 #include <ncursesw/curses.h>
 #include <string.h>
@@ -24,6 +26,11 @@ enum TEXT_FORMATS {
 
 const Snek * snek;
 
+/**
+ * Prepares the terminal for the game,
+ * Initializes ncurses, Sets terminal resize event handler
+ * @param game
+ */
 void initializeScreen(const Snek * game) {
     snek = game;
     setlocale(LC_ALL, "");
@@ -43,18 +50,32 @@ void initializeScreen(const Snek * game) {
     sigaction(SIGWINCH, &signal_handler, NULL);
 }
 
+/**
+ * Handles window resize event using SIGWINCH
+ * @param signal code of received signal (unused attribute is necessary because func.
+ * pointers aren't recognised correctly)
+ *
+ */
 static void windowResizeHandler(__attribute__((unused)) int signal) {
-    endwin();
-    printf("Game aborted due to terminal resize\n");
-    endGame(snek);
-    exit(-1);
+    if (signal == SIGWINCH) {
+        endwin();
+        printf("Game aborted due to terminal resize\n");
+        endGame(snek);
+        exit(-1);
+    }
 }
 
+/**
+ * Closes ncurses sessions, flushes characters in input queue
+ */
 void closeScreen() {
     flushinp();
     endwin();
 }
 
+/**
+ * Draws the current state of the game on the terminal
+ */
 void drawGame() {
     erase();
     drawFrame(snek);
@@ -63,27 +84,47 @@ void drawGame() {
     refresh();
 }
 
+/**
+ * Returns the number of terminal rows
+ * @return number of terminal rows
+ */
 int getRows() {
     return rows;
 }
 
+/**
+ * Returns the number of terminal columns
+ * @return number of terminal columns
+ */
 int getColumns() {
     return columns;
 }
 
-char readCharacter(long timeout_ms) {
+/**
+ * Reads a character from the screen in a non-blocking way
+ * @param timeout_ms milliseconds to wait before returning if no key has been pressed
+ * @return keycode, or -1 if no button was pressed
+ */
+int readCharacter(long timeout_ms) {
     timeout(timeout_ms);
-    char key = getch();
+    int key = wgetch(window);
     if (key == ERR)
         return -1;
     flushinp();
     return key;
 }
 
+/**
+ * Prints an error message to the standard error output
+ * @param error string to print
+ */
 void print_error(const char * error) {
     perror(error);
 }
 
+/**
+ * Draw the game over screen
+ */
 void drawGameOver() {
     char game_over[] = "GAME OVER";
     attron(A_BOLD);
@@ -97,6 +138,9 @@ void drawGameOver() {
     attroff(A_BOLD);
 }
 
+/**
+ * Draw the frame around the game field
+ */
 static void drawFrame() {
     attron(COLOR_PAIR(WHITE_BLACK));
     char status[50];
@@ -114,12 +158,18 @@ static void drawFrame() {
     attroff(COLOR_PAIR(WHITE_BLACK));
 }
 
+/**
+ * Draw the food of the snake
+ */
 static void drawFood() {
     attron(COLOR_PAIR(RED_BLACK));
     mvaddstr(snek->food->y, snek->food->x, "●");
     attroff(COLOR_PAIR(RED_BLACK));
 }
 
+/**
+ * Draw the snake itself
+ */
 static void drawSnake() {
     LinkedList * snake = snek->snake;
     snake->toStart(snake);

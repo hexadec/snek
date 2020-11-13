@@ -46,9 +46,7 @@ LinkedList * createLinkedList() {
 }
 
 /**
- * Steps the linked list to its next node
- * @param linkedList LinkedList instance to work with
- * @return true on success, false otherwise
+ * @copydoc LinkedList.next
  */
 static bool next(LinkedList * linkedList) {
     if (linkedList != NULL && linkedList->node != NULL && linkedList->node->next != NULL) {
@@ -59,9 +57,7 @@ static bool next(LinkedList * linkedList) {
 }
 
 /**
- * Steps the linked list to its previous node
- * @param linkedList LinkedList instance to work with
- * @return true on success, false otherwise
+ * @copydoc LinkedList.prev
  */
 static bool prev(LinkedList * linkedList) {
     if (linkedList != NULL && linkedList->node != NULL && linkedList->node->prev != NULL) {
@@ -72,8 +68,7 @@ static bool prev(LinkedList * linkedList) {
 }
 
 /**
- * Steps the linked list to its first node
- * @param linkedList LinkedList instance to work with
+ * @copydoc LinkedList.toStart
  */
 static void toStart(LinkedList * linkedList) {
     if (linkedList != NULL && linkedList->node != NULL) {
@@ -83,8 +78,7 @@ static void toStart(LinkedList * linkedList) {
 }
 
 /**
- * Steps the linked list to its last node
- * @param linkedList LinkedList instance to work with
+ * @copydoc LinkedList.toEnd
  */
 static void toEnd(LinkedList * linkedList) {
     if (linkedList != NULL && linkedList->node != NULL) {
@@ -94,10 +88,7 @@ static void toEnd(LinkedList * linkedList) {
 }
 
 /**
- * Moves the node of the linked list
- * @param linkedList LinkedList instance to work with
- * @param offset number of nodes to move
- * @param whence sets whether to move from current position, start or end
+ * @copydoc LinkedList.seek
  */
 static void seek(LinkedList * linkedList, int offset, Flags whence) {
     if (linkedList != NULL && linkedList->node != NULL) {
@@ -129,11 +120,7 @@ static void seek(LinkedList * linkedList, int offset, Flags whence) {
 }
 
 /**
- * Adds a new node to the linked list after its current position
- * and sets the node to the newly added one
- * @param linkedList LinkedList instance to work with
- * @param data pointer to data to hold
- * @return true on success, false otherwise
+ * @copydoc LinkedList.add
  */
 static bool add(LinkedList * linkedList, void * data) {
     if (linkedList == NULL) return false;
@@ -159,11 +146,7 @@ static bool add(LinkedList * linkedList, void * data) {
 }
 
 /**
- * Adds a new node to the start of the linked list
- * and sets the node to the newly added one
- * @param linkedList LinkedList instance to work with
- * @param data pointer to data to hold
- * @return true on success, false otherwise
+ * @copydoc LinkedList.addFirst
  */
 static bool addFirst(LinkedList * linkedList, void * data) {
     if (linkedList == NULL) return false;
@@ -187,11 +170,7 @@ static bool addFirst(LinkedList * linkedList, void * data) {
 }
 
 /**
- * Adds a new node to the end of the linked list
- * and sets the node to the newly added one
- * @param linkedList LinkedList instance to work with
- * @param data pointer to data to hold
- * @return true on success, false otherwise
+ * @copydoc LinkedList.addLast
  */
 static bool addLast(LinkedList * linkedList, void * data) {
     linkedList->toEnd(linkedList);
@@ -199,9 +178,7 @@ static bool addLast(LinkedList * linkedList, void * data) {
 }
 
 /**
- * Removed current node from the linked list
- * frees memory pointed by node.data and frees node
- * @param linkedList LinkedList instance to work with
+ * @copydoc LinkedList.removeItem
  */
 static void removeItem(LinkedList * linkedList) {
     if (linkedList != NULL && linkedList->node != NULL) {
@@ -221,27 +198,21 @@ static void removeItem(LinkedList * linkedList) {
 }
 
 /**
- * Checks if the linked list has a previous node
- * @param linkedList LinkedList instance to work with
- * @return true if there is a previous node, that is not NULL, false otherwise
+ * @copydoc LinkedList.hasPrevious
  */
 static bool hasPrevious(LinkedList * linkedList) {
     return linkedList != NULL && linkedList->node != NULL && linkedList->node->prev != NULL;
 }
 
 /**
- * Checks if the linked list has a next node
- * @param linkedList LinkedList instance to work with
- * @return true if there is a next node, that is not NULL, false otherwise
+ * @copydoc LinkedList.hasNext
  */
 static bool hasNext(LinkedList * linkedList) {
     return linkedList != NULL && linkedList->node != NULL && linkedList->node->next != NULL;
 }
 
 /**
- * Calculates the size of the linked list, and sets the current node to the final position
- * @param linkedList LinkedList instance to work with
- * @return number of nodes in \p linkedList
+ * @copydoc LinkedList.size
  */
 static size_t size(LinkedList * linkedList) {
     size_t size = 0;

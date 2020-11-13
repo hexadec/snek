@@ -12,7 +12,7 @@ void initializeScreen(const Snek * snek);
 void closeScreen();
 int getRows();
 int getColumns();
-char readCharacter(long);
+int readCharacter(long);
 void print_error(const char *);
 void drawGameOver();
 
