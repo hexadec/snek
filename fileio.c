@@ -38,6 +38,8 @@ int saveScore(char * name, int score) {
  */
 int getHighscore(char * name) {
     FILE * file = fopen(scores_file, "r");
+    if (file == NULL)
+        return 0;
     char buffer[BUFFER_SIZE];
     int score = 0;
     while (fgets(buffer, BUFFER_SIZE, file) != NULL) {
