@@ -27,7 +27,8 @@ int saveScore(char * name, int score) {
     if (strlen(name) > 80)
         name[81] = '\0';
     int result = fprintf(file, "%s,%d\n", name, score);
-    fclose(file);
+    if (fclose(file) != 0)
+        return -1;
     return result;
 }
 

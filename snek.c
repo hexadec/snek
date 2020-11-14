@@ -166,8 +166,8 @@ void addNewHead(Snek * snek) {
  */
 void placeNewFood(Snek * snek) {
     int x, y;
+    unsigned int coords[2];
     do {
-        unsigned int coords[2];
         //Generate cryptographically secure random numbers (for fun) (syscall!)
         getrandom(&coords, 2 * sizeof(unsigned int), GRND_RANDOM);
         x = (int) (coords[0] % (getColumns() - 2) + 1);
@@ -181,7 +181,7 @@ void placeNewFood(Snek * snek) {
  * Checks if an end-of-game condition has been met.
  * This includes the snake biting on its tail and hitting a wall.
  * @param snek holds all important game parameters
- * @return
+ * @return true if an end-of-game condition has been met, false otherwise
  */
 bool isGameOver(const Snek * snek) {
     LinkedList * snake = snek->snake;
@@ -231,6 +231,7 @@ void endGame(const Snek * snek) {
 /**
  * Finishes the game, prints an error message
  * Frees all allocated memory, if there was any
+ * @param snek holds all important game parameters
  */
 void mallocError(const Snek * snek){
     if (snek != NULL)

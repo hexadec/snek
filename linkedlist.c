@@ -1,4 +1,10 @@
 /**
+ * This file contains the functions that are required to work with linked lists.
+ * Most of these functions are static and only accessible through a function pointer
+ * from a \p LinkedList instance. This is done in order to prevent unnecessary
+ * function definitions in other files.
+ * \attention LinkedList works with dynamically allocated data, as it frees memory
+ * whenever an action occurs that makes a pointer inaccessible for later use.
  * \file linkedlist.c
  * \author hexadec
  * \brief This file contains the logic required to work with linked lists
