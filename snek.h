@@ -32,6 +32,10 @@ typedef struct {
     char * player_name;
 } Snek;
 
+/**
+ * @brief Finishes the game, frees all memory
+ * @param snek holds all important game parameters
+ */
 void endGame(const Snek * snek);
 
 #endif //SNEK_SNEK_H

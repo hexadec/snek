@@ -12,18 +12,72 @@
 #include "debugmalloc.h"
 #include "fileio.h"
 
+/**
+ * Steps the game to its next state. This includes moving the snake and placing a new food
+ * @brief Steps the game to its next state
+ * @param snek holds all important game parameters
+ * @return \p false if an exit condition has been met, \p true otherwise
+ */
 bool stepGame(Snek *);
+
+/**
+ * @brief Adds a new head to the snake to the direction specified
+ * @param snek holds all important game parameters
+ */
 void addNewHead(Snek *);
+
+/**
+ * Places a new food in the game in a random position, on a block that is not occupied by the snake
+ * @brief Places a new food in the game
+ * @param snek holds all important game parameters
+ */
 void placeNewFood(Snek *);
+
+/**
+ * This function is responsible for controlling the game after it has started
+ * It reads a control character and steps the game until an exit condition has been reached
+ * @brief Manages all game actions
+ * @param snek holds all important game parameters
+ * @returns when an exit condition had been met
+ */
 void gameLoop(Snek *);
+
+/**
+ * Initialises game: read highscore for given player, create necessary data structures
+ * @brief Initialises the game
+ * @param snek holds all important game parameters
+ */
 void initGame(Snek *);
+
+/**
+ * Checks if an end-of-game condition has been met.
+ * This includes the snake biting on its tail and hitting a wall.
+ * @brief Checks if an end-of-game condition has been met.
+ * @param snek holds all important game parameters
+ * @return \p true if an end-of-game condition has been met, \p false otherwise
+ */
 bool isGameOver(const Snek *);
+
+/**
+ * @brief Checks if a given point is occupied by the snake
+ * @param snek holds all important game parameters
+ * @param x column index
+ * @param y row index
+ * @param ignore_head do not check for x, y point in the head of the snake
+ * @return \p true if the point is inside the snake, \p false otherwise
+ */
 bool isPointInSnake(const Snek *, int, int, bool);
 
+/**
+ * Finishes the game, prints an error message
+ * Frees all allocated memory, if there was any
+ * @brief Used to finish the game after a malloc error
+ * @param snek holds all important game parameters
+ */
 void mallocError(const Snek * snek);
 
 /**
- * Entry point of the program
+ * @brief Entry point of the program
  * @return exit code
  */
 int main() {
@@ -36,11 +90,6 @@ int main() {
     endGame(&snek);
     return 0;
 }
-
-/**
- * Initialises game: read highscore for given player, create necessary data structures
- * @param snek holds all important game parameters
- */
 void initGame(Snek * snek) {
     snek->highscore = getHighscore("Józsi");
     snek->score = 1;
@@ -61,12 +110,6 @@ void initGame(Snek * snek) {
     placeNewFood(snek);
 }
 
-/**
- * This function is responsible for controlling the game after it has started
- * It reads a control character and steps the game until an exit condition has been reached
- * @param snek holds all important game parameters
- * @returns when an exit condition had been met
- */
 void gameLoop(Snek * snek) {
     struct timespec start, end;
     long remainder = 0;
@@ -108,11 +151,6 @@ void gameLoop(Snek * snek) {
     } while (continue_game);
 }
 
-/**
- * Steps the game to its next state. This includes moving the snake and placing a new food
- * @param snek holds all important game parameters
- * @return false if an exit condition has been met, true otherwise
- */
 bool stepGame(Snek * snek) {
     addNewHead(snek);
     if (isGameOver(snek)) return false;
@@ -129,10 +167,6 @@ bool stepGame(Snek * snek) {
     return true;
 }
 
-/**
- * Adds a new head to the snake to the direction specified
- * @param snek holds all important game parameters
- */
 void addNewHead(Snek * snek) {
     LinkedList * snake = snek->snake;
     snake->toStart(snake);
@@ -160,10 +194,6 @@ void addNewHead(Snek * snek) {
     if (!snake->addFirst(snake, new)) mallocError(snek);
 }
 
-/**
- * Places a new food in the game in a random position, on a block that is not occupied by the snake
- * @param snek holds all important game parameters
- */
 void placeNewFood(Snek * snek) {
     int x, y;
     unsigned int coords[2];
@@ -177,12 +207,6 @@ void placeNewFood(Snek * snek) {
     snek->food->y = y;
 }
 
-/**
- * Checks if an end-of-game condition has been met.
- * This includes the snake biting on its tail and hitting a wall.
- * @param snek holds all important game parameters
- * @return true if an end-of-game condition has been met, false otherwise
- */
 bool isGameOver(const Snek * snek) {
     LinkedList * snake = snek->snake;
     snake->toStart(snake);
@@ -194,14 +218,6 @@ bool isGameOver(const Snek * snek) {
     return isPointInSnake(snek, head->x, head->y, true);
 }
 
-/**
- * Checks if a given point is occupied by the snake
- * @param snek holds all important game parameters
- * @param x column index
- * @param y row index
- * @param ignore_head do not check for x, y point in the head of the snake
- * @return true, if the point is inside the snake, false otherwise
- */
 bool isPointInSnake(const Snek * snek, int x, int y, bool ignore_head) {
     LinkedList * snake = snek->snake;
     snake->toStart(snake);
@@ -217,10 +233,6 @@ bool isPointInSnake(const Snek * snek, int x, int y, bool ignore_head) {
     return false;
 }
 
-/**
- * Finishes the game, frees memory
- * @param snek holds all important game parameters
- */
 void endGame(const Snek * snek) {
     closeScreen();
     saveScore(snek->player_name, snek->score);
@@ -228,11 +240,6 @@ void endGame(const Snek * snek) {
     free(snek->food);
 }
 
-/**
- * Finishes the game, prints an error message
- * Frees all allocated memory, if there was any
- * @param snek holds all important game parameters
- */
 void mallocError(const Snek * snek){
     if (snek != NULL)
         endGame(snek);

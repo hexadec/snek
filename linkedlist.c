@@ -15,23 +15,32 @@
 #include "linkedlist.h"
 #include "debugmalloc.h"
 
+/** @private */
 static bool next(LinkedList *);
+/** @private */
 static bool prev(LinkedList *);
+/** @private */
 static void toStart(LinkedList *);
+/** @private */
 static void toEnd(LinkedList *);
+/** @private */
 static bool add(LinkedList *, void * data);
+/** @private */
 static bool addFirst(LinkedList *, void * data);
+/** @private */
 static bool addLast(LinkedList *, void * data);
+/** @private */
 static void removeItem(LinkedList *);
+/** @private */
 static void seek(LinkedList *, int offset, Flags whence);
+/** @private */
 static bool hasNext(LinkedList *);
+/** @private */
 static bool hasPrevious(LinkedList *);
+/** @private */
 static size_t size(LinkedList *);
 
-/**
- * Creates a LinkedList instance
- * @return a LinkedList instance
- */
+
 LinkedList * createLinkedList() {
     LinkedList * new = malloc(sizeof (LinkedList));
     if (new == NULL) return NULL;
@@ -51,9 +60,6 @@ LinkedList * createLinkedList() {
     return new;
 }
 
-/**
- * @copydoc LinkedList.next
- */
 static bool next(LinkedList * linkedList) {
     if (linkedList != NULL && linkedList->node != NULL && linkedList->node->next != NULL) {
         linkedList->node = linkedList->node->next;
@@ -62,9 +68,6 @@ static bool next(LinkedList * linkedList) {
     return false;
 }
 
-/**
- * @copydoc LinkedList.prev
- */
 static bool prev(LinkedList * linkedList) {
     if (linkedList != NULL && linkedList->node != NULL && linkedList->node->prev != NULL) {
         linkedList->node = linkedList->node->prev;
@@ -73,9 +76,6 @@ static bool prev(LinkedList * linkedList) {
     return false;
 }
 
-/**
- * @copydoc LinkedList.toStart
- */
 static void toStart(LinkedList * linkedList) {
     if (linkedList != NULL && linkedList->node != NULL) {
         while (linkedList->node->prev != NULL)
@@ -83,9 +83,6 @@ static void toStart(LinkedList * linkedList) {
     }
 }
 
-/**
- * @copydoc LinkedList.toEnd
- */
 static void toEnd(LinkedList * linkedList) {
     if (linkedList != NULL && linkedList->node != NULL) {
         while (linkedList->node->next != NULL)
@@ -93,9 +90,6 @@ static void toEnd(LinkedList * linkedList) {
     }
 }
 
-/**
- * @copydoc LinkedList.seek
- */
 static void seek(LinkedList * linkedList, int offset, Flags whence) {
     if (linkedList != NULL && linkedList->node != NULL) {
         int position = 0;
@@ -125,9 +119,6 @@ static void seek(LinkedList * linkedList, int offset, Flags whence) {
     }
 }
 
-/**
- * @copydoc LinkedList.add
- */
 static bool add(LinkedList * linkedList, void * data) {
     if (linkedList == NULL) return false;
     if (linkedList->node == NULL) {
@@ -151,9 +142,6 @@ static bool add(LinkedList * linkedList, void * data) {
     return true;
 }
 
-/**
- * @copydoc LinkedList.addFirst
- */
 static bool addFirst(LinkedList * linkedList, void * data) {
     if (linkedList == NULL) return false;
     linkedList->toStart(linkedList);
@@ -175,17 +163,11 @@ static bool addFirst(LinkedList * linkedList, void * data) {
     return true;
 }
 
-/**
- * @copydoc LinkedList.addLast
- */
 static bool addLast(LinkedList * linkedList, void * data) {
     linkedList->toEnd(linkedList);
     return add(linkedList, data);
 }
 
-/**
- * @copydoc LinkedList.removeItem
- */
 static void removeItem(LinkedList * linkedList) {
     if (linkedList != NULL && linkedList->node != NULL) {
         Node * old = linkedList->node;
@@ -203,23 +185,14 @@ static void removeItem(LinkedList * linkedList) {
     }
 }
 
-/**
- * @copydoc LinkedList.hasPrevious
- */
 static bool hasPrevious(LinkedList * linkedList) {
     return linkedList != NULL && linkedList->node != NULL && linkedList->node->prev != NULL;
 }
 
-/**
- * @copydoc LinkedList.hasNext
- */
 static bool hasNext(LinkedList * linkedList) {
     return linkedList != NULL && linkedList->node != NULL && linkedList->node->next != NULL;
 }
 
-/**
- * @copydoc LinkedList.size
- */
 static size_t size(LinkedList * linkedList) {
     size_t size = 0;
     if (linkedList == NULL || linkedList->node == NULL) return 0;
@@ -230,11 +203,6 @@ static size_t size(LinkedList * linkedList) {
     return size;
 }
 
-/**
- * Frees all memory used by \p linkedList
- * Uses removeItem to remove all items and then frees the memory used by the instance as well
- * @param linkedList LinkedList instance to work with
- */
 void dumpLinkedList(LinkedList * linkedList) {
     while (linkedList != NULL && linkedList->node != NULL)
         removeItem(linkedList);

@@ -15,7 +15,7 @@
 static const char scores_file[] = "scores.txt";
 
 /**
- * Saves player's score
+ * @brief Saves player's score
  * @param name player name
  * @param score score achieved in this round
  * @return result of fprintf, -1 on failure
@@ -33,7 +33,7 @@ int saveScore(char * name, int score) {
 }
 
 /**
- * Retrieves the highscore of a given player from the scores file
+ * @brief Retrieves the highscore of a given player from the scores file
  * @param name player name
  * @return highscore of player, 0 if not found, -1 * (error code) on error
  */

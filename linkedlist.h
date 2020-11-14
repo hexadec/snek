@@ -50,7 +50,7 @@ typedef struct Node {
  */
 typedef struct LinkedList {
     /**
-     * The current node
+     * @brief The current node
      */
     Node * node;
 
@@ -165,7 +165,18 @@ typedef struct LinkedList {
     size_t (*size)(struct LinkedList *);
 } LinkedList;
 
+/**
+ * @brief Creates a \p LinkedList instance
+ * @return a \p LinkedList instance
+ */
 LinkedList * createLinkedList();
+
+/**
+ * Frees all memory used by \p linkedList
+ * Uses removeItem to remove all items and then frees the memory used by the instance as well
+ * @brief Frees all memory used by the \p LinkedList instance
+ * @param linkedList LinkedList instance to work with
+ */
 void dumpLinkedList(LinkedList *);
 
 #endif //SNEK_LINKEDLIST_H
