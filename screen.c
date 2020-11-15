@@ -15,6 +15,7 @@
 #include <locale.h>
 #include <signal.h>
 #include <stdlib.h>
+#include "debugmalloc.h"
 #include "screen.h"
 #include "snek.h"
 
@@ -161,6 +162,8 @@ static void drawFrame() {
     attron(COLOR_PAIR(WHITE_BLACK));
     char status[50];
     sprintf(status, "SCORE%6d        HIGHSCORE%6d", snek->score, snek->highscore);
+    wmove(window, 0, 0);
+    printw(snek->player_name);
     wmove(window, 0, (int) (columns / 2 - strlen(status) / 2));
     printw(status);
     for (int i = 0; i < columns; i++) {
@@ -195,4 +198,27 @@ static void drawSnake() {
         mvaddstr(point->y, point->x, "▓");
     } while (snake->next(snake));
     attroff(COLOR_PAIR(GREEN_BLACK));
+}
+
+/**
+ * @brief Asks the user for their nickname
+ * @return dynamically allocated string containing the chosen nickname
+ * or "anonymous" if no valid name was given
+ */
+char * getNickname() {
+    int nick_max_size = 15;
+    echo();
+    char * username = malloc((nick_max_size + 1) * sizeof(char));
+    mvaddstr(rows / 2, columns / 2 - (columns > 30 ? 8 : columns / 4), "Nickname?  ");
+    int c, pos = 0;
+    keypad(window, false);
+    while ((c = getch()) != '\n' && pos < nick_max_size) {
+        username[pos++] = (char) c;
+    }
+    username[pos] = '\0';
+    if (strlen(username) < 1)
+        strcpy(username, "anonymous");
+    noecho();
+    keypad(window, true);
+    return username;
 }

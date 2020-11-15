@@ -15,5 +15,6 @@ int getColumns();
 int readCharacter(long);
 void print_error(const char *);
 void drawGameOver();
+char * getNickname();
 
 #endif //SNEK_SCREEN_H

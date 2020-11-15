@@ -91,13 +91,15 @@ int main() {
     return 0;
 }
 void initGame(Snek * snek) {
-    snek->highscore = getHighscore("Józsi");
+    snek->player_name = getNickname();
+    if (snek->player_name == NULL) mallocError(NULL);
+
+    snek->highscore = getHighscore(snek->player_name);
     snek->score = 1;
     snek->direction = UP;
     snek->food = NULL;
     snek->snake = createLinkedList();
-    if (snek->snake == NULL) mallocError(NULL);
-    snek->player_name = "Józsi";
+    if (snek->snake == NULL) mallocError(snek);
 
     Point * first = malloc(sizeof(Point));
     if (first == NULL) mallocError(snek);
@@ -238,6 +240,7 @@ void endGame(const Snek * snek) {
     saveScore(snek->player_name, snek->score);
     dumpLinkedList(snek->snake);
     free(snek->food);
+    free(snek->player_name);
 }
 
 void mallocError(const Snek * snek){
