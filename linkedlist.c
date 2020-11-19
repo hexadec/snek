@@ -39,6 +39,8 @@ static bool hasNext(LinkedList *);
 static bool hasPrevious(LinkedList *);
 /** @private */
 static size_t size(LinkedList *);
+/** @private */
+static void swap(LinkedList *, int, int);
 
 
 LinkedList * createLinkedList() {
@@ -57,6 +59,7 @@ LinkedList * createLinkedList() {
     new->hasNext = &hasNext;
     new->hasPrevious = &hasPrevious;
     new->size = &size;
+    new->swap = &swap;
     return new;
 }
 
@@ -191,6 +194,17 @@ static bool hasPrevious(LinkedList * linkedList) {
 
 static bool hasNext(LinkedList * linkedList) {
     return linkedList != NULL && linkedList->node != NULL && linkedList->node->next != NULL;
+}
+
+static void swap(LinkedList * linkedList, int index1, int index2) {
+    linkedList->seek(linkedList, index1, BEGIN);
+    void ** data1 = &linkedList->node->data;
+    linkedList->seek(linkedList, index2, BEGIN);
+    void ** data2 = &linkedList->node->data;
+    void * temp = *data2;
+    *data2 = *data1;
+    *data1 = temp;
+    linkedList->toStart(linkedList);
 }
 
 static size_t size(LinkedList * linkedList) {

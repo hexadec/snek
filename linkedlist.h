@@ -46,7 +46,9 @@ typedef struct Node {
  * This is a structure that holds a linked list, and all related methods are accessible from here.
  * Function pointers are included, in order to avoid spamming the project with function names,
  * that would otherwise confuse the developer and possibly conflict with other functions.
- * @brief Structure containing a linked list
+ * Please note, that this is a general-purpose linked list,
+ * therefore many functions are unused in this project.
+ * @brief Structure containing a general-purpose linked list
  */
 typedef struct LinkedList {
     /**
@@ -163,6 +165,16 @@ typedef struct LinkedList {
     * @return number of nodes in \p linkedList
     */
     size_t (*size)(struct LinkedList *);
+
+    /**
+     * Swaps the data of two nodes in the linked list.
+     * The current node will point to the beginning afterwards.
+     * @brief Swaps the data of two nodes in the linked list.
+     * @param linkedList LinkedList instance to work with
+     * @param index1 index of first node from the beginning of the list
+     * @param index2 index of second node from the beginning of the list
+     */
+    void (*swap)(struct LinkedList *, int, int);
 } LinkedList;
 
 /**

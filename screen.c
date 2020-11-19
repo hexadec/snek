@@ -20,7 +20,7 @@
 #include "snek.h"
 
 static void drawFrame();
-static void drawSnake();
+static void drawSnake(bool);
 static void drawFood();
 static void windowResizeHandler(__attribute__((unused)) int);
 
@@ -95,9 +95,9 @@ void closeScreen() {
  */
 void drawGame() {
     erase();
-    drawFrame(snek);
-    drawFood(snek);
-    drawSnake(snek);
+    drawFrame();
+    drawFood();
+    drawSnake(false);
     refresh();
 }
 
@@ -145,12 +145,13 @@ void print_error(const char * error) {
 void drawGameOver() {
     char game_over[] = "GAME OVER";
     attron(A_BOLD);
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 10; i++) {
+        drawSnake(i % 2 == 0);
         attron(i % 2 == 0 ? COLOR_PAIR(BLACK_BLACK) : COLOR_PAIR(RED_BLACK));
         mvaddstr((int) (rows / 2), (int) (columns / 2 - strlen(game_over) / 2), game_over);
         attroff(i % 2 == 0 ? COLOR_PAIR(BLACK_BLACK) : COLOR_PAIR(RED_BLACK));
         refresh();
-        nanosleep(&(const struct timespec){0, 5E8}, NULL);
+        nanosleep(&(const struct timespec){0, 4E8}, NULL);
     }
     attroff(A_BOLD);
 }
@@ -189,13 +190,13 @@ static void drawFood() {
 /**
  * @brief Draw the snake itself
  */
-static void drawSnake() {
+static void drawSnake(bool ghost) {
     LinkedList * snake = snek->snake;
     snake->toStart(snake);
     attron(COLOR_PAIR(GREEN_BLACK));
     do {
         Point * point = snake->node->data;
-        mvaddstr(point->y, point->x, "▓");
+        mvaddstr(point->y, point->x, ghost ? "░" : "▓");
     } while (snake->next(snake));
     attroff(COLOR_PAIR(GREEN_BLACK));
 }
