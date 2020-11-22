@@ -19,13 +19,31 @@
 #include "screen.h"
 #include "snek.h"
 
+/**
+ * @brief Draw the frame around the game field
+ */
 static void drawFrame();
+
+/**
+ * @brief Draw the snake itself
+ */
 static void drawSnake(bool);
+
+/**
+ * @brief Draw the food of the snake
+ */
 static void drawFood();
-static void windowResizeHandler(__attribute__((unused)) int);
+
+/**
+ * Handles signal events, such as terminal resize, and \p SIGUSR1.
+ * \p SIGUSR1 is sent if the terminal size is too small
+ * @brief Handles signal events (\p SIGWINCH and \p SIGUSR1 )
+ * @param signal code of received signal
+ */
+static void signalEventHandler(int);
 
 static WINDOW * window;
-static int rows, columns;
+const static Snek * snek;
 
 /**
  * @brief \p enum storing indices of \p COLOR_PAIR -s
@@ -38,61 +56,58 @@ enum TEXT_FORMATS {
     /** @brief Green text, black background*/
     GREEN_BLACK,
     /** @brief Black text (darkgray), black background*/
-    BLACK_BLACK
+    BLACK_BLACK,
+    /** @brief Black text, white background*/
+    BLACK_WHITE
 };
 
-const static Snek * snek;
-
-/**
- * Sets up necessary terminal configuration for the game,
- * Initializes ncurses, Sets terminal resize event handler
- * @brief prepares the terminal for the game
- * @param game hold all important game parameters
- */
-void initializeScreen(const Snek * game) {
+void initializeScreen(Snek * game) {
     snek = game;
     setlocale(LC_ALL, "");
     window = initscr();
     noecho();
     curs_set(0);
-    getmaxyx(window, rows, columns);
+    game->game_size = (Point){getmaxx(window), getmaxy(window)};
+    if (game->game_size.x < 35 || game->game_size.y < 8)
+        //Too small terminal
+        signalEventHandler(SIGUSR1);
     keypad(window, true);
     start_color();
     init_pair(WHITE_BLACK, COLOR_WHITE, COLOR_BLACK);
     init_pair(RED_BLACK, COLOR_RED, COLOR_BLACK);
     init_pair(GREEN_BLACK, COLOR_GREEN, COLOR_BLACK);
     init_pair(BLACK_BLACK, COLOR_BLACK, COLOR_BLACK);
+    init_pair(BLACK_WHITE, COLOR_BLACK, COLOR_WHITE);
     static struct sigaction signal_handler;
     memset(&signal_handler, 0, sizeof(struct sigaction));
-    signal_handler.sa_handler = windowResizeHandler;
+    signal_handler.sa_handler = signalEventHandler;
     sigaction(SIGWINCH, &signal_handler, NULL);
 }
 
-/**
- * @brief Handles window resize event using SIGWINCH
- * @param signal code of received signal (unused attribute is necessary because func.
- * pointers aren't recognised correctly)
- */
-static void windowResizeHandler(__attribute__((unused)) int signal) {
-    if (signal == SIGWINCH) {
-        endwin();
-        printf("Game aborted due to terminal resize\n");
-        endGame(snek);
-        exit(-1);
+static void signalEventHandler(int signal) {
+    switch (signal) {
+        case SIGWINCH:
+            endwin();
+            printf("Game aborted due to terminal resize\n");
+            endGame(snek);
+            exit(-1);
+            break;
+        case SIGUSR1:
+            endwin();
+            printf("Terminal size too small, aborting\n");
+            endGame(snek);
+            exit(-1);
+            break;
+        default:
+            break;
     }
 }
 
-/**
- * @brief Closes ncurses sessions, flushes characters in input queue
- */
 void closeScreen() {
     flushinp();
     endwin();
 }
 
-/**
- * @brief Draws the current state of the game on the terminal
- */
 void drawGame() {
     erase();
     drawFrame();
@@ -101,27 +116,6 @@ void drawGame() {
     refresh();
 }
 
-/**
- * @brief Returns the number of terminal rows
- * @return number of terminal rows
- */
-int getRows() {
-    return rows;
-}
-
-/**
- * @brief Returns the number of terminal columns
- * @return number of terminal columns
- */
-int getColumns() {
-    return columns;
-}
-
-/**
- * @brief Reads a character from the screen in a non-blocking way
- * @param timeout_ms milliseconds to wait before returning if no key has been pressed
- * @return keycode, or -1 if no button was pressed
- */
 int readCharacter(long timeout_ms) {
     timeout(timeout_ms);
     int key = wgetch(window);
@@ -131,65 +125,49 @@ int readCharacter(long timeout_ms) {
     return key;
 }
 
-/**
- * @brief Prints an error message to the standard error output
- * @param error string to print
- */
 void print_error(const char * error) {
     perror(error);
 }
 
-/**
- * @brief Draws the game-over screen
- */
 void drawGameOver() {
     char game_over[] = "GAME OVER";
     attron(A_BOLD);
     for (int i = 0; i < 10; i++) {
         drawSnake(i % 2 == 0);
         attron(i % 2 == 0 ? COLOR_PAIR(BLACK_BLACK) : COLOR_PAIR(RED_BLACK));
-        mvaddstr((int) (rows / 2), (int) (columns / 2 - strlen(game_over) / 2), game_over);
+        mvaddstr((int) (getmaxy(window) / 2), (int) (getmaxx(window) / 2 - strlen(game_over) / 2), game_over);
         attroff(i % 2 == 0 ? COLOR_PAIR(BLACK_BLACK) : COLOR_PAIR(RED_BLACK));
         refresh();
-        nanosleep(&(const struct timespec){0, 4E8}, NULL);
+        nanosleep(&(struct timespec){0, 4E8}, NULL);
     }
     attroff(A_BOLD);
 }
 
-/**
- * @brief Draw the frame around the game field
- */
 static void drawFrame() {
     attron(COLOR_PAIR(WHITE_BLACK));
     char status[50];
     sprintf(status, "SCORE%6d        HIGHSCORE%6d", snek->score, snek->highscore);
     wmove(window, 0, 0);
     printw(snek->player_name);
-    wmove(window, 0, (int) (columns / 2 - strlen(status) / 2));
+    wmove(window, 0, (int) (getmaxx(window) / 2 - strlen(status) / 2));
     printw(status);
-    for (int i = 0; i < columns; i++) {
+    for (int i = 0; i < getmaxx(window); i++) {
         mvaddstr(1, i, "▒");
-        mvaddstr(rows - 1, i, "▒");
+        mvaddstr(getmaxy(window) - 1, i, "▒");
     }
-    for (int i = 2; i < rows - 1; i++) {
+    for (int i = 2; i < getmaxy(window) - 1; i++) {
         mvaddstr(i, 0, "▒");
-        mvaddstr(i, columns - 1, "▒");
+        mvaddstr(i, getmaxx(window) - 1, "▒");
     }
     attroff(COLOR_PAIR(WHITE_BLACK));
 }
 
-/**
- * @brief Draw the food of the snake
- */
 static void drawFood() {
     attron(COLOR_PAIR(RED_BLACK));
     mvaddstr(snek->food->y, snek->food->x, "●");
     attroff(COLOR_PAIR(RED_BLACK));
 }
 
-/**
- * @brief Draw the snake itself
- */
 static void drawSnake(bool ghost) {
     LinkedList * snake = snek->snake;
     snake->toStart(snake);
@@ -201,25 +179,81 @@ static void drawSnake(bool ghost) {
     attroff(COLOR_PAIR(GREEN_BLACK));
 }
 
-/**
- * @brief Asks the user for their nickname
- * @return dynamically allocated string containing the chosen nickname
- * or "anonymous" if no valid name was given
- */
-char * getNickname() {
-    int nick_max_size = 15;
+void getNickname(char ** username) {
+    const int nick_max_size = NICK_MAX_LENGTH;
+    int columns = getmaxx(window);
     echo();
-    char * username = malloc((nick_max_size + 1) * sizeof(char));
-    mvaddstr(rows / 2, columns / 2 - (columns > 30 ? 8 : columns / 4), "Nickname?  ");
-    int c, pos = 0;
+    *username = malloc((nick_max_size + 1) * sizeof(char));
+    mvaddstr(getmaxy(window) / 2, columns / 2 - (columns > 30 ? 8 : columns / 4), "Nickname?  ");
     keypad(window, false);
-    while ((c = getch()) != '\n' && pos < nick_max_size) {
-        username[pos++] = (char) c;
-    }
-    username[pos] = '\0';
-    if (strlen(username) < 1)
-        strcpy(username, "anonymous");
+    getnstr(*username, nick_max_size);
+    if (strlen(*username) < 1)
+        strcpy(*username, "anonymous");
     noecho();
     keypad(window, true);
-    return username;
+}
+
+bool drawQuestionDialog(char * question, char * optTrue, char * optFalse) {
+    erase();
+    int centerx = getmaxx(window) / 2 - strlenUTF8(question) / 2;
+    int centery = getmaxy(window) / 2 - 4 / 2;
+    attron(A_BOLD);
+    mvprintw(centery, centerx, question);
+    attroff(A_BOLD);
+    int selection = 0;
+    int c = 0;
+    keypad(window, true);
+    do {
+        if (c == KEY_UP || c == KEY_DOWN)
+            selection++;
+        attron(selection % 2 == 0 ? COLOR_PAIR(BLACK_WHITE) : COLOR_PAIR(WHITE_BLACK));
+        mvprintw(centery + 2, centerx, optTrue);
+        attroff(selection % 2 == 0 ? COLOR_PAIR(BLACK_WHITE) : COLOR_PAIR(WHITE_BLACK));
+        attron(selection % 2 == 1 ? COLOR_PAIR(BLACK_WHITE) : COLOR_PAIR(WHITE_BLACK));
+        mvprintw(centery + 3, centerx, optFalse);
+        attroff(selection % 2 == 1 ? COLOR_PAIR(BLACK_WHITE) : COLOR_PAIR(WHITE_BLACK));
+    } while ((c = getch()) != '\n');
+    return selection % 2 == 0;
+}
+
+size_t strlenUTF8(char * str) {
+    int count = 0;
+    while (*str != '\0') {
+        if ((unsigned char)(*str) < 0x80)
+            count++;
+        else if ((unsigned char)(*str) <= 0xDF && (unsigned char)(*str) >= 0xC2) {
+            if (((unsigned char)(*(str + 1)) & 0xC0u) == 0x80)
+                count++;
+        } else if ((unsigned char)(*str) <= 0xEF && (unsigned char)(*str) >= 0xE0) {
+            if (((unsigned char)(*(str + 1)) & 0xC0u) == 0x80 && ((unsigned char)(*(str + 2)) & 0xC0u) == 0x80)
+                count++;
+        } else if ((unsigned char)(*str) <= 0xF4 && (unsigned char)(*str) >= 0xF0) {
+            if (((unsigned char)(*(str + 1)) & 0xC0u) == 0x80 && ((unsigned char)(*(str + 2)) & 0xC0u) == 0x80 && ((unsigned char)(*(str + 3)) & 0xC0u) == 0x80)
+                count++;
+        }
+        str++;
+    }
+    return count;
+}
+
+void drawToplist(Nick_Score * toplist, int size) {
+    erase();
+    int centerx = getmaxx(window) / 2 - 20 / 2;
+    int centery = getmaxy(window) / 2 - size / 2;
+    mvprintw(centery - 2, centerx, "TOP %d", size);
+    // ─ is three bytes long, therefore it would mess with both normal
+    // and wide char functions, so do it the easy way (20 pcs)
+    mvprintw(centery - 1, centerx, "────────────────────");
+    for (int i = 0; i < size; i++) {
+        unsigned nicklen = strlen(toplist[i].nick);
+        if (nicklen == 0)
+            break;
+        if (i < 3)
+            attron(A_BOLD);
+        mvprintw(centery++, centerx, "%s%*d", toplist[i].nick, 20 - nicklen,toplist[i].score);
+        if (i < 3)
+            attroff(A_BOLD);
+    }
+    mvprintw(getmaxy(window) - 1, 0, "Press any key to quit");
+    refresh();
 }

@@ -13,6 +13,13 @@
 #include "fileio.h"
 
 /**
+ * @brief Frees the memory used by the toplist
+ * @param toplist Toplist containing nickname and score pairs
+ * @param toplist_size Size of the toplist
+ */
+void freeToplist(Nick_Score *, int);
+
+/**
  * Steps the game to its next state. This includes moving the snake and placing a new food
  * @brief Steps the game to its next state
  * @param snek holds all important game parameters
@@ -82,29 +89,40 @@ void mallocError(const Snek * snek);
  */
 int main() {
     Snek snek;
+    //Sets memory to zero -> all pointers will be NULL, avoids segfault on resize
+    memset(&snek, 0, sizeof(Snek));
     initializeScreen(&snek);
     initGame(&snek);
     gameLoop(&snek);
+    saveScore(snek.player_name, snek.score);
     drawGameOver();
     readCharacter(-1);
+
+    if (drawQuestionDialog("Do you want to see the toplist?", "Yes", "No")) {
+        int toplist_size = 10;
+        Nick_Score *toplist = getToplist(toplist_size);
+        drawToplist(toplist, toplist_size);
+        freeToplist(toplist, toplist_size);
+        readCharacter(-1);
+    }
+
     endGame(&snek);
     return 0;
 }
 void initGame(Snek * snek) {
-    snek->player_name = getNickname();
+    getNickname(&(snek->player_name));
     if (snek->player_name == NULL) mallocError(NULL);
 
     snek->highscore = getHighscore(snek->player_name);
     snek->score = 1;
     snek->direction = UP;
-    snek->food = NULL;
     snek->snake = createLinkedList();
     if (snek->snake == NULL) mallocError(snek);
 
     Point * first = malloc(sizeof(Point));
     if (first == NULL) mallocError(snek);
-    first->x = getColumns() / 2;
-    first->y = getRows() / 2;
+    first->x = snek->game_size.x / 2;
+    first->y = snek->game_size.y / 2;
     if (snek->snake->addFirst(snek->snake, first) == false) mallocError(snek);
 
     snek->food = malloc(sizeof(Point));
@@ -202,8 +220,8 @@ void placeNewFood(Snek * snek) {
     do {
         //Generate cryptographically secure random numbers (for fun) (syscall!)
         getrandom(&coords, 2 * sizeof(unsigned int), GRND_RANDOM);
-        x = (int) (coords[0] % (getColumns() - 2) + 1);
-        y = (int) (coords[1] % (getRows() - 3) + 2);
+        x = (int) (coords[0] % (snek->game_size.x - 2) + 1);
+        y = (int) (coords[1] % (snek->game_size.y - 3) + 2);
     } while (isPointInSnake(snek, x, y, false));
     snek->food->x = x;
     snek->food->y = y;
@@ -215,7 +233,7 @@ bool isGameOver(const Snek * snek) {
     Point * head = snake->node->data;
     if (head->x < 1 || head->y < 2)
         return true;
-    if (head->x > getColumns() - 2 || head->y > getRows() - 2)
+    if (head->x > snek->game_size.x - 2 || head->y > snek->game_size.y - 2)
         return true;
     return isPointInSnake(snek, head->x, head->y, true);
 }
@@ -235,9 +253,15 @@ bool isPointInSnake(const Snek * snek, int x, int y, bool ignore_head) {
     return false;
 }
 
+void freeToplist(Nick_Score * toplist, int toplist_size) {
+    for (int i = 0; i < toplist_size; i++) {
+        free(toplist[i].nick);
+    }
+    free(toplist);
+}
+
 void endGame(const Snek * snek) {
     closeScreen();
-    saveScore(snek->player_name, snek->score);
     dumpLinkedList(snek->snake);
     free(snek->food);
     free(snek->player_name);

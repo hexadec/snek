@@ -9,12 +9,22 @@
 
 typedef enum {UP, DOWN, LEFT, RIGHT} Direction;
 
+#define NICK_MAX_LENGTH 15
+
 /**
  * @brief Structure to hold positions in a 2D plane
  */
 typedef struct Point {
     int x, y;
 } Point;
+
+/**
+ * @brief Structure holding a Nickname-Score pair
+ */
+typedef struct {
+    char * nick;
+    int score;
+} Nick_Score;
 
 /** @brief Structure to hold all important parameters of the game */
 typedef struct {
@@ -26,6 +36,8 @@ typedef struct {
     Direction direction;
     /** @brief Position of the snake's food */
     Point * food;
+    /** @brief Size of the game area */
+    Point game_size;
     /** @brief \p LinkedList containing the positions of the snake */
     LinkedList * snake;
     /** @brief nickname of current player */
