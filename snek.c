@@ -89,7 +89,8 @@ void mallocError(const Snek * snek);
  */
 int main() {
     Snek snek;
-    //Sets memory to zero -> all pointers will be NULL, avoids segfault on resize
+    // Sets memory to zero -> all pointers will be NULL
+    // Avoids segfault if resize occurs before these are set
     memset(&snek, 0, sizeof(Snek));
     initializeScreen(&snek);
     initGame(&snek);
@@ -98,7 +99,8 @@ int main() {
     drawGameOver();
     readCharacter(-1);
 
-    if (drawQuestionDialog("Do you want to see the toplist?", "Yes", "No")) {
+    //Add spaces to the options to make them nicer on screen (not necessary)
+    if (drawQuestionDialog("Do you want to see the toplist?", "  Yes  ", "  No   ")) {
         int toplist_size = 10;
         Nick_Score *toplist = getToplist(toplist_size);
         drawToplist(toplist, toplist_size);

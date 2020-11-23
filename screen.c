@@ -141,6 +141,7 @@ void drawGameOver() {
         nanosleep(&(struct timespec){0, 4E8}, NULL);
     }
     attroff(A_BOLD);
+    mvprintw(getmaxy(window) - 1, 0, "Press any key to continue");
 }
 
 static void drawFrame() {
@@ -195,39 +196,43 @@ void getNickname(char ** username) {
 
 bool drawQuestionDialog(char * question, char * optTrue, char * optFalse) {
     erase();
-    int centerx = getmaxx(window) / 2 - strlenUTF8(question) / 2;
+    size_t question_length = strlenUTF8(question);
+    size_t opt_true_length = strlenUTF8(optTrue);
+    size_t opt_false_length = strlenUTF8(optFalse);
+    int centerx = getmaxx(window) / 2;
     int centery = getmaxy(window) / 2 - 4 / 2;
     attron(A_BOLD);
-    mvprintw(centery, centerx, question);
+    mvprintw(centery, centerx - question_length / 2, question);
     attroff(A_BOLD);
-    int selection = 0;
+    unsigned selection = 0;
     int c = 0;
     keypad(window, true);
-    do {
+    do { //Move the selection between the two options
         if (c == KEY_UP || c == KEY_DOWN)
             selection++;
         attron(selection % 2 == 0 ? COLOR_PAIR(BLACK_WHITE) : COLOR_PAIR(WHITE_BLACK));
-        mvprintw(centery + 2, centerx, optTrue);
+        mvprintw(centery + 2, centerx - opt_true_length / 2, optTrue);
         attroff(selection % 2 == 0 ? COLOR_PAIR(BLACK_WHITE) : COLOR_PAIR(WHITE_BLACK));
         attron(selection % 2 == 1 ? COLOR_PAIR(BLACK_WHITE) : COLOR_PAIR(WHITE_BLACK));
-        mvprintw(centery + 3, centerx, optFalse);
+        mvprintw(centery + 3, centerx - opt_false_length / 2, optFalse);
         attroff(selection % 2 == 1 ? COLOR_PAIR(BLACK_WHITE) : COLOR_PAIR(WHITE_BLACK));
-    } while ((c = getch()) != '\n');
+    } while ((c = getch()) != '\n'); // Until the user presses enter
     return selection % 2 == 0;
 }
 
 size_t strlenUTF8(char * str) {
-    int count = 0;
+    //https://en.wikipedia.org/wiki/UTF-8#Encoding
+    size_t count = 0;
     while (*str != '\0') {
-        if ((unsigned char)(*str) < 0x80)
+        if ((unsigned char)(*str) < 0x80) // ASCII-block
             count++;
-        else if ((unsigned char)(*str) <= 0xDF && (unsigned char)(*str) >= 0xC2) {
+        else if ((unsigned char)(*str) <= 0xDF && (unsigned char)(*str) >= 0xC2) { // Characters with two byte representation
             if (((unsigned char)(*(str + 1)) & 0xC0u) == 0x80)
                 count++;
-        } else if ((unsigned char)(*str) <= 0xEF && (unsigned char)(*str) >= 0xE0) {
+        } else if ((unsigned char)(*str) <= 0xEF && (unsigned char)(*str) >= 0xE0) { // Characters with three byte representation
             if (((unsigned char)(*(str + 1)) & 0xC0u) == 0x80 && ((unsigned char)(*(str + 2)) & 0xC0u) == 0x80)
                 count++;
-        } else if ((unsigned char)(*str) <= 0xF4 && (unsigned char)(*str) >= 0xF0) {
+        } else if ((unsigned char)(*str) <= 0xF4 && (unsigned char)(*str) >= 0xF0) { // Characters with four byte representation
             if (((unsigned char)(*(str + 1)) & 0xC0u) == 0x80 && ((unsigned char)(*(str + 2)) & 0xC0u) == 0x80 && ((unsigned char)(*(str + 3)) & 0xC0u) == 0x80)
                 count++;
         }
@@ -245,7 +250,7 @@ void drawToplist(Nick_Score * toplist, int size) {
     // and wide char functions, so do it the easy way (20 pcs)
     mvprintw(centery - 1, centerx, "────────────────────");
     for (int i = 0; i < size; i++) {
-        unsigned nicklen = strlen(toplist[i].nick);
+        size_t nicklen = strlenUTF8(toplist[i].nick);
         if (nicklen == 0)
             break;
         if (i < 3)

@@ -92,6 +92,7 @@ Nick_Score * getToplist(int toplist_size) {
             score = line_score;
         Nick_Score * min = getMinimumScore(toplist, toplist_size);
         if (min->score <= score) {
+            // Not the most efficient way, but good enough for us
             free(min->nick);
             min->nick = malloc((strlen(buffer) + 1) * sizeof(char));
             strcpy(min->nick, buffer);
