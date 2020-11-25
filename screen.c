@@ -223,6 +223,8 @@ bool drawQuestionDialog(char * question, char * optTrue, char * optFalse) {
 size_t strlenUTF8(char * str) {
     //https://en.wikipedia.org/wiki/UTF-8#Encoding
     size_t count = 0;
+    if (str == NULL)
+        return 0;
     while (*str != '\0') {
         if ((unsigned char)(*str) < 0x80) // ASCII-block
             count++;
