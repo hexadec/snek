@@ -45,8 +45,19 @@ static void drawFood();
  */
 static void signalEventHandler(int);
 
+/**
+ * Necessary to have as a static global variable, as a window instance
+ * is only returned on \p initscr()
+ * @brief Variable holding window related information, necessary for most functions
+ */
 static WINDOW * window;
-const static Snek * snek;
+
+/**
+ * Necessary to keep function headers simple as it would cause unnecessarily long
+ * definitions. Static as no other files should be able to access this variable.
+ * @brief Struct that holds all important game parameters
+ */
+static const Snek * snek;
 
 /**
  * @brief \p enum storing indices of \p COLOR_PAIR -s
@@ -66,9 +77,12 @@ enum TEXT_FORMATS {
 
 void initializeScreen(Snek * game) {
     snek = game;
+    // Support shading characters as well
     setlocale(LC_ALL, "");
     window = initscr();
+    // Disable terminal echo (when the user presses a control key)
     noecho();
+    // Hide cursor
     curs_set(0);
     game->game_size = (Point){getmaxx(window), getmaxy(window)};
     if (game->game_size.x < 35 || game->game_size.y < 8)

@@ -13,8 +13,10 @@
 void drawGame();
 
 /**
- * Sets up necessary terminal configuration for the game,
- * Initializes ncurses, Sets terminal resize event handler
+ * Sets up necessary terminal configuration for the game:
+ * Initializes ncurses, sets terminal resize event handler.
+ * Disables terminal echo, hides cursor. Enables keypad mode to
+ * detect keypresses other than printable characters.
  * @brief prepares the terminal for the game
  * @param game hold all important game parameters
  */
