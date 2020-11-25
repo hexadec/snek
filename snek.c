@@ -84,6 +84,8 @@ bool isPointInSnake(const Snek *, int, int, bool);
 void mallocError(const Snek * snek);
 
 /**
+ * Entry point of the program that (tries to) ensure that all pointers
+ * are null before pointing to an allocated memory to avoid any segfaults.
  * @brief Entry point of the program
  * @return exit code
  */
@@ -100,10 +102,12 @@ int main() {
     readCharacter(-1);
 
     //Add spaces to the options to make them nicer on screen (not necessary)
+    //Only load the toplist if the user choses to see it, this also avoids closing with allocated memory
     if (drawQuestionDialog("Do you want to see the toplist?", "  Yes  ", "  No   ")) {
         int toplist_size = 10;
         Nick_Score *toplist = getToplist(toplist_size);
         drawToplist(toplist, toplist_size);
+        //Free immediately to avoid closing with unfreed memory (e.g. on SIGWINCH)
         freeToplist(toplist, toplist_size);
         readCharacter(-1);
     }
@@ -141,32 +145,45 @@ void gameLoop(Snek * snek) {
             drawGame(snek);
         clock_gettime(CLOCK_MONOTONIC_RAW, &start);
         int dir = readCharacter(remainder == 0 ? 750 : remainder);
+        bool invalid_button = false;
         switch (dir) {
+            case -1:
+                //No button was pressed
+                break;
             case 'w':
                 if (snek->direction != DOWN)
                     snek->direction = UP;
+                else
+                    invalid_button = true;
                 break;
             case 'a':
                 if (snek->direction != RIGHT)
                     snek->direction = LEFT;
+                else
+                    invalid_button = true;
                 break;
             case 's':
                 if (snek->direction != UP)
                     snek->direction = DOWN;
+                else
+                    invalid_button = true;
                 break;
             case 'd':
                 if (snek->direction != LEFT)
                     snek->direction = RIGHT;
-                break;
-            case -1:
-                //No button was pressed
+                else
+                    invalid_button = true;
                 break;
             default:
-                //A button other than a control button has been pressed
-                //Go to next iteration, but allow steps to occur at the same time
-                clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-                remainder = (remainder == 0 ? 750 : remainder) - ((end.tv_sec - start.tv_sec) * 1000L + (end.tv_nsec - start.tv_nsec) / (long) 1E6);
-                continue;
+                invalid_button = true;
+        }
+        if (invalid_button) {
+            // A button other than a control button has been pressed
+            // (or the player wanted the snake to turn over)
+            // Go to next iteration, but allow steps to occur at the same time
+            clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+            remainder = (remainder == 0 ? 750 : remainder) - ((end.tv_sec - start.tv_sec) * 1000L + (end.tv_nsec - start.tv_nsec) / (long) 1E6);
+            continue;
         }
         remainder = 0;
         continue_game = stepGame(snek);

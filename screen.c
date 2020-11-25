@@ -36,7 +36,10 @@ static void drawFood();
 
 /**
  * Handles signal events, such as terminal resize, and \p SIGUSR1.
- * \p SIGUSR1 is sent if the terminal size is too small
+ * \p SIGUSR1 is sent if the terminal size is too small.
+ * This piece of code is mainly necessary to free memory on close,
+ * no matter which state the program is in, and avoid any segfaults by preventing
+ * freeing memory that is not yet used.
  * @brief Handles signal events (\p SIGWINCH and \p SIGUSR1 )
  * @param signal code of received signal
  */
